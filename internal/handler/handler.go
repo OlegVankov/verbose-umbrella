@@ -65,15 +65,15 @@ func update(w http.ResponseWriter, req *http.Request) {
 }
 
 func parseURL(r *http.Request) []string {
-	path := r.URL.Path
-	path = strings.TrimPrefix(strings.TrimSpace(path), "/update/")
-	if strings.HasPrefix(path, "/") {
-		path = path[1:]
-	}
+	path := strings.TrimSpace(r.URL.Path)
+	path = strings.TrimPrefix(path, "/update/")
+
 	if strings.HasSuffix(path, "/") {
 		sz := len(path) - 1
 		path = path[:sz]
 	}
+
 	sl := strings.Split(path, "/")
+
 	return sl
 }
