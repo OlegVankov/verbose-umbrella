@@ -2,6 +2,7 @@ package handler
 
 import (
 	storage2 "github.com/OlegVankov/verbose-umbrella/internal/storage"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,11 +21,12 @@ func NewHandler() *Handler {
 }
 
 var storage = &storage2.MemStorage{
-	Gauge:   map[string]float64{},
-	Counter: map[string]int64{},
+	Gauge:   map[string]storage2.Gauge{},
+	Counter: map[string]storage2.Counter{},
 }
 
 func update(w http.ResponseWriter, req *http.Request) {
+	log.Println(req.URL.Path)
 	if req.Method != http.MethodPost {
 		w.WriteHeader(http.StatusNotImplemented)
 		return
@@ -41,26 +43,21 @@ func update(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		storage.Counter[m[1]] += value
+		storage.UpdateCounter(m[1], storage2.Counter(value))
 	case "gauge":
 		value, err := strconv.ParseFloat(m[2], 64)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		storage.Gauge[m[1]] += value
+		storage.UpdateGauge(m[1], storage2.Gauge(value))
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	value, err := strconv.ParseInt(m[2], 10, 64)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	storage.Counter[m[1]] += value
 	w.Header().Set("Content-Type", "plain/text")
 	w.WriteHeader(http.StatusOK)
+	log.Println(storage)
 	w.Write([]byte(""))
 }
 
