@@ -16,3 +16,13 @@ func (m *MemStorage) UpdateGauge(name string, val Gauge) {
 func (m *MemStorage) UpdateCounter(name string, val Counter) {
 	m.Counter[name] += val
 }
+
+func (m *MemStorage) GetGauge(name string) (Gauge, bool) {
+	val, ok := m.Gauge[name]
+	return val, ok
+}
+
+func (m *MemStorage) GetCounter(name string) (Counter, bool) {
+	val, ok := m.Counter[name]
+	return val, ok
+}

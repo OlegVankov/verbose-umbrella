@@ -1,76 +1,86 @@
 package handler
 
 import (
+	"fmt"
 	storage2 "github.com/OlegVankov/verbose-umbrella/internal/storage"
-	"log"
+	"github.com/go-chi/chi/v5"
+	"html/template"
 	"net/http"
 	"strconv"
-	"strings"
 )
-
-type Handler struct {
-	Mux *http.ServeMux
-}
-
-func NewHandler() *Handler {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/update/", update)
-	return &Handler{
-		Mux: mux,
-	}
-}
 
 var storage = &storage2.MemStorage{
 	Gauge:   map[string]storage2.Gauge{},
 	Counter: map[string]storage2.Counter{},
 }
 
-func update(w http.ResponseWriter, req *http.Request) {
-	log.Println(req.URL.Path)
-	if req.Method != http.MethodPost {
-		w.WriteHeader(http.StatusNotImplemented)
+func Main(w http.ResponseWriter, req *http.Request) {
+	ts, err := template.ParseFiles("./html/home.page.tmpl")
+	if err != nil {
+		w.WriteHeader(http.StatusBadGateway)
 		return
 	}
-	m := parseURL(req)
-	if len(m) != 3 {
-		w.WriteHeader(http.StatusNotFound)
+
+	err = ts.Execute(w, storage)
+	if err != nil {
+		w.WriteHeader(http.StatusBadGateway)
 		return
 	}
-	switch m[0] {
+
+}
+
+func Update(w http.ResponseWriter, req *http.Request) {
+	typeMetric := chi.URLParam(req, "type")
+	name := chi.URLParam(req, "name")
+
+	switch typeMetric {
 	case "counter":
-		value, err := strconv.ParseInt(m[2], 10, 64)
+		value, err := strconv.ParseInt(chi.URLParam(req, "value"), 10, 64)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		storage.UpdateCounter(m[1], storage2.Counter(value))
+		storage.UpdateCounter(name, storage2.Counter(value))
 	case "gauge":
-		value, err := strconv.ParseFloat(m[2], 64)
+		value, err := strconv.ParseFloat(chi.URLParam(req, "value"), 64)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		storage.UpdateGauge(m[1], storage2.Gauge(value))
+		storage.UpdateGauge(name, storage2.Gauge(value))
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	w.Header().Set("Content-Type", "plain/text")
 	w.WriteHeader(http.StatusOK)
-	log.Println(storage)
-	w.Write([]byte(""))
 }
 
-func parseURL(r *http.Request) []string {
-	path := strings.TrimSpace(r.URL.Path)
-	path = strings.TrimPrefix(path, "/update/")
-
-	if strings.HasSuffix(path, "/") {
-		sz := len(path) - 1
-		path = path[:sz]
+func ValueGauge(w http.ResponseWriter, req *http.Request) {
+	name := chi.URLParam(req, "name")
+	value, ok := storage.GetGauge(name)
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
+	w.Header().Set("Content-Type", "plain/text")
+	w.WriteHeader(http.StatusOK)
 
-	sl := strings.Split(path, "/")
+	val := float64(value)
+	w.Write([]byte(fmt.Sprint(val)))
+}
 
-	return sl
+func ValueCounter(w http.ResponseWriter, req *http.Request) {
+	name := chi.URLParam(req, "name")
+	value, ok := storage.GetCounter(name)
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "plain/text")
+	w.WriteHeader(http.StatusOK)
+
+	val := int64(value)
+	w.Write([]byte(fmt.Sprint(val)))
 }
