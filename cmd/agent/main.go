@@ -5,8 +5,10 @@ import (
 	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -133,6 +135,15 @@ func SendMetrics(client *http.Client, url string, duration int, wg *sync.WaitGro
 
 func main() {
 	parseFlags()
+	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
+		flagRunAddr = envRunAddr
+	}
+	if envRI := os.Getenv("REPORT_INTERVAL"); envRI != "" {
+		reportInterval, _ = strconv.Atoi(envRI)
+	}
+	if envPI := os.Getenv("POLL_INTERVAL"); envPI != "" {
+		pollInterval, _ = strconv.Atoi(envPI)
+	}
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
