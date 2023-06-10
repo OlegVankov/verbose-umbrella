@@ -12,11 +12,6 @@ import (
 	"time"
 )
 
-const (
-	pollInterval   = 2
-	reportInterval = 10
-)
-
 type Monitor struct {
 	Alloc         storage.Gauge
 	BuckHashSys   storage.Gauge
@@ -117,8 +112,8 @@ func SendMetrics(client *http.Client, url string, duration int, wg *sync.WaitGro
 		<-time.After(time.Duration(duration) * time.Second)
 
 		for _, v := range m.getRoutes() {
-			req, err := http.NewRequest(http.MethodPost, url+v, nil)
-			req.Header.Set("Host", "localhost:8080")
+			req, err := http.NewRequest(http.MethodPost, "http://"+url+v, nil)
+			req.Header.Set("Host", flagRunAddr)
 			req.Header.Set("Content-Type", "text/plain")
 			if err != nil {
 				log.Println(err.Error())
@@ -137,13 +132,13 @@ func SendMetrics(client *http.Client, url string, duration int, wg *sync.WaitGro
 }
 
 func main() {
-	endpoint := "http://localhost:8080"
+	parseFlags()
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go RunMonitor(pollInterval, &wg)
-	go SendMetrics(client, endpoint, reportInterval, &wg)
+	go SendMetrics(client, flagRunAddr, reportInterval, &wg)
 	wg.Wait()
 }

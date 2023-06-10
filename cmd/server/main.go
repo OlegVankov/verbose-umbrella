@@ -6,13 +6,10 @@ import (
 	"log"
 )
 
-const (
-	PORT = "8080"
-)
-
 func main() {
+	parseFlags()
 	srv := server.Server{}
-	if err := srv.Run(PORT, handler.MetricsRouter()); err != nil {
+	if err := srv.Run(flagRunAddr, handler.MetricsRouter()); err != nil {
 		log.Fatalf("failed occured server: %s", err.Error())
 	}
 }
