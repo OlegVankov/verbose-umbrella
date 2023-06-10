@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"github.com/stretchr/testify/require"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -8,46 +10,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_update(t *testing.T) {
-	tests := []struct {
-		name         string
-		method       string
-		target       string
-		expectedCode int
-	}{
-		{name: "test #1", method: http.MethodGet, target: "/update/gauge/alloc/100", expectedCode: http.StatusNotImplemented},
-		{name: "test #2", method: http.MethodPut, target: "/update/gauge/alloc/100", expectedCode: http.StatusNotImplemented},
-		{name: "test #3", method: http.MethodDelete, target: "/update/gauge/alloc/100", expectedCode: http.StatusNotImplemented},
-		{name: "test #4", method: http.MethodPost, target: "/update/gauge/alloc/100", expectedCode: http.StatusOK},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := httptest.NewRequest(tt.method, tt.target, nil)
-			w := httptest.NewRecorder()
-			update(w, r)
-			assert.Equal(t, w.Code, tt.expectedCode, "Код ответа не совпадает с ожидаемым")
-		})
-	}
+func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.Response, string) {
+	req, err := http.NewRequest(method, ts.URL+path, nil)
+	require.NoError(t, err)
+	resp, err := ts.Client().Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	return resp, string(body)
 }
 
-func Test_parseURL(t *testing.T) {
-	type args struct {
-		r *http.Request
-	}
+func TestRouter(t *testing.T) {
+
+	ts := httptest.NewServer(MetricsRouter())
+	defer ts.Close()
+
 	tests := []struct {
-		name string
-		args args
-		want []string
+		url    string
+		method string
+		want   string
+		status int
 	}{
-		{
-			name: "test #1",
-			args: struct{ r *http.Request }{r: httptest.NewRequest(http.MethodPost, "/update/gauge/metric/100", nil)},
-			want: []string{"gauge", "metric", "100"},
-		},
+		{url: "/update/gauge/Alloc/100", method: http.MethodPost, want: "", status: http.StatusOK},
+		{url: "/update/gauge/Alloc/100", method: http.MethodGet, want: "", status: http.StatusMethodNotAllowed},
+		{url: "/update/counter/PollCount/999", method: http.MethodPost, want: "", status: http.StatusOK},
 	}
+
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equalf(t, tt.want, parseURL(tt.args.r), "parseURL(%v)", tt.args.r)
-		})
+		resp, body := testRequest(t, ts, tt.method, tt.url)
+		assert.Equal(t, tt.status, resp.StatusCode)
+		assert.Equal(t, tt.want, body)
 	}
 }

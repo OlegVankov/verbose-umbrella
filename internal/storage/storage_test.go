@@ -62,3 +62,63 @@ func TestMemStorage_UpdateCounter(t *testing.T) {
 		})
 	}
 }
+
+func TestMemStorage_GetGauge(t *testing.T) {
+	type fields struct {
+		Gauge   map[string]Gauge
+		Counter map[string]Counter
+	}
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   Gauge
+		want1  bool
+	}{
+		{name: "test #1", fields: fields{Gauge: map[string]Gauge{"alloc": 100}}, args: args{name: "alloc"}, want: 100, want1: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &MemStorage{
+				Gauge:   tt.fields.Gauge,
+				Counter: tt.fields.Counter,
+			}
+			got, got1 := m.GetGauge(tt.args.name)
+			assert.Equalf(t, tt.want, got, "GetGauge(%v)", tt.args.name)
+			assert.Equalf(t, tt.want1, got1, "GetGauge(%v)", tt.args.name)
+		})
+	}
+}
+
+func TestMemStorage_GetCounter(t *testing.T) {
+	type fields struct {
+		Gauge   map[string]Gauge
+		Counter map[string]Counter
+	}
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   Counter
+		want1  bool
+	}{
+		{name: "test #1", fields: fields{Counter: map[string]Counter{"PollCount": 100}}, args: args{name: "PollCount"}, want: 100, want1: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &MemStorage{
+				Gauge:   tt.fields.Gauge,
+				Counter: tt.fields.Counter,
+			}
+			got, got1 := m.GetCounter(tt.args.name)
+			assert.Equalf(t, tt.want, got, "GetCounter(%v)", tt.args.name)
+			assert.Equalf(t, tt.want1, got1, "GetCounter(%v)", tt.args.name)
+		})
+	}
+}

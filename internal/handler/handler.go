@@ -9,12 +9,25 @@ import (
 	"strconv"
 )
 
+func MetricsRouter() chi.Router {
+	r := chi.NewRouter()
+	r.Get("/", home)
+	r.Route("/value", func(r chi.Router) {
+		r.Get("/gauge/{name}", valueGauge)
+		r.Get("/counter/{name}", valueCounter)
+	})
+	r.Route("/update", func(r chi.Router) {
+		r.Post("/{type}/{name}/{value}", update)
+	})
+	return r
+}
+
 var storage = &storage2.MemStorage{
 	Gauge:   map[string]storage2.Gauge{},
 	Counter: map[string]storage2.Counter{},
 }
 
-func Main(w http.ResponseWriter, req *http.Request) {
+func home(w http.ResponseWriter, req *http.Request) {
 	ts, err := template.ParseFiles("./html/home.page.tmpl")
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
@@ -29,7 +42,7 @@ func Main(w http.ResponseWriter, req *http.Request) {
 
 }
 
-func Update(w http.ResponseWriter, req *http.Request) {
+func update(w http.ResponseWriter, req *http.Request) {
 	typeMetric := chi.URLParam(req, "type")
 	name := chi.URLParam(req, "name")
 
@@ -57,7 +70,7 @@ func Update(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func ValueGauge(w http.ResponseWriter, req *http.Request) {
+func valueGauge(w http.ResponseWriter, req *http.Request) {
 	name := chi.URLParam(req, "name")
 	value, ok := storage.GetGauge(name)
 	if !ok {
@@ -71,7 +84,7 @@ func ValueGauge(w http.ResponseWriter, req *http.Request) {
 	w.Write([]byte(fmt.Sprint(val)))
 }
 
-func ValueCounter(w http.ResponseWriter, req *http.Request) {
+func valueCounter(w http.ResponseWriter, req *http.Request) {
 	name := chi.URLParam(req, "name")
 	value, ok := storage.GetCounter(name)
 	if !ok {
