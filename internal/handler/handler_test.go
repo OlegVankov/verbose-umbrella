@@ -41,5 +41,6 @@ func TestRouter(t *testing.T) {
 		resp, body := testRequest(t, ts, tt.method, tt.url)
 		assert.Equal(t, tt.status, resp.StatusCode)
 		assert.Equal(t, tt.want, body)
+		resp.Body.Close()
 	}
 }
