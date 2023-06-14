@@ -5,14 +5,16 @@
     </head>
     <body>
         <ul>
-        {{ range $key, $val := .Gauge }}
-            <li>{{ $key }}: {{ $val }}</li>
-        {{ end }}
-        </ul>
+        {{ with Storage }}
+            {{ range $key, $val := .GetGaugeAll }}
+                <li>{{ $key }}: {{ $val }}</li>
+            {{ end }}
 
-        <ul>
-        {{ range $key, $val := .Counter }}
-            <li>{{ $key }}: {{ $val }}</li>
+        </ul>
+            <ul>
+            {{ range $key, $val := .GetCounterAll }}
+                <li>{{ $key }}: {{ $val }}</li>
+            {{ end }}
         {{ end }}
         </ul>
     </body>

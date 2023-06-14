@@ -2,47 +2,52 @@ package handler
 
 import (
 	"fmt"
-	storage2 "github.com/OlegVankov/verbose-umbrella/internal/storage"
-	"github.com/go-chi/chi/v5"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	stor "github.com/OlegVankov/verbose-umbrella/internal/storage"
+	"github.com/go-chi/chi/v5"
 )
 
-func MetricsRouter() chi.Router {
-	r := chi.NewRouter()
-	r.Get("/", home)
-	r.Route("/value", func(r chi.Router) {
-		r.Get("/gauge/{name}", valueGauge)
-		r.Get("/counter/{name}", valueCounter)
-	})
-	r.Route("/update", func(r chi.Router) {
-		r.Post("/{type}/{name}/{value}", update)
-	})
-	return r
+type Handler struct {
+	Router  *chi.Mux
+	storage stor.Storage
 }
 
-var storage = &storage2.MemStorage{
-	Gauge:   map[string]storage2.Gauge{},
-	Counter: map[string]storage2.Counter{},
+func NewHandler() Handler {
+	return Handler{
+		Router:  chi.NewRouter(),
+		storage: stor.NewStorage(),
+	}
 }
 
-func home(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) SetRoute() {
+	h.Router.Get("/", h.home)
+	h.Router.Route("/value", func(r chi.Router) {
+		r.Get("/gauge/{name}", h.valueGauge)
+		r.Get("/counter/{name}", h.valueCounter)
+	})
+	h.Router.Route("/update", func(r chi.Router) {
+		r.Post("/{type}/{name}/{value}", h.update)
+	})
+}
+
+func (h *Handler) home(w http.ResponseWriter, req *http.Request) {
 	ts, err := template.ParseFiles("./html/home.page.tmpl")
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
 		return
 	}
 
-	err = ts.Execute(w, storage)
+	err = ts.Execute(w, h.storage)
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
 		return
 	}
-
 }
 
-func update(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) update(w http.ResponseWriter, req *http.Request) {
 	typeMetric := chi.URLParam(req, "type")
 	name := chi.URLParam(req, "name")
 
@@ -53,14 +58,14 @@ func update(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		storage.UpdateCounter(name, storage2.Counter(value))
+		h.storage.UpdateCounter(name, stor.Counter(value))
 	case "gauge":
 		value, err := strconv.ParseFloat(chi.URLParam(req, "value"), 64)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		storage.UpdateGauge(name, storage2.Gauge(value))
+		h.storage.UpdateGauge(name, stor.Gauge(value))
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -70,9 +75,9 @@ func update(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func valueGauge(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) valueGauge(w http.ResponseWriter, req *http.Request) {
 	name := chi.URLParam(req, "name")
-	value, ok := storage.GetGauge(name)
+	value, ok := h.storage.GetGauge(name)
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -84,9 +89,9 @@ func valueGauge(w http.ResponseWriter, req *http.Request) {
 	w.Write([]byte(fmt.Sprint(val)))
 }
 
-func valueCounter(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) valueCounter(w http.ResponseWriter, req *http.Request) {
 	name := chi.URLParam(req, "name")
-	value, ok := storage.GetCounter(name)
+	value, ok := h.storage.GetCounter(name)
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		return

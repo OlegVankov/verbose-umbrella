@@ -1,13 +1,13 @@
 package handler
 
 import (
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.Response, string) {
@@ -22,8 +22,9 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.
 }
 
 func TestRouter(t *testing.T) {
-
-	ts := httptest.NewServer(MetricsRouter())
+	handler := NewHandler()
+	handler.SetRoute()
+	ts := httptest.NewServer(handler.Router)
 	defer ts.Close()
 
 	tests := []struct {

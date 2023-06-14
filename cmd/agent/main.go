@@ -2,16 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 	"log"
 	"net/http"
-	"os"
 	"reflect"
 	"runtime"
-	"strconv"
 	"strings"
-	"sync"
 	"time"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 )
 
 type Monitor struct {
@@ -50,8 +48,8 @@ var m = Monitor{
 	PollCount: 0,
 }
 
-func RunMonitor(duration int, wg *sync.WaitGroup) {
-	defer wg.Done()
+func RunMonitor(duration int) {
+
 	rtm := runtime.MemStats{}
 	for {
 		<-time.After(time.Duration(duration) * time.Second)
@@ -98,7 +96,8 @@ func (m *Monitor) getRoutes() []string {
 		valueField := val.Field(i)
 		typeField := val.Type().Field(i)
 
-		urls = append(urls, fmt.Sprintf("/%s/%s/%s/%v", "update",
+		urls = append(urls, fmt.Sprintf("http://%s/%s/%s/%s/%v",
+			serverAddr, "update",
 			strings.ToLower(strings.Split(typeField.Type.String(), ".")[1]),
 			typeField.Name, valueField.Interface()))
 	}
@@ -106,19 +105,18 @@ func (m *Monitor) getRoutes() []string {
 	return urls
 }
 
-func SendMetrics(client *http.Client, url string, duration int, wg *sync.WaitGroup) {
-	defer wg.Done()
+func SendMetrics(client *http.Client, duration int) {
 
 	for {
 
 		<-time.After(time.Duration(duration) * time.Second)
 
-		for _, v := range m.getRoutes() {
-			req, err := http.NewRequest(http.MethodPost, "http://"+url+v, nil)
-			req.Header.Set("Host", flagRunAddr)
+		for _, url := range m.getRoutes() {
+			req, err := http.NewRequest(http.MethodPost, url, nil)
+			req.Header.Set("Host", serverAddr)
 			req.Header.Set("Content-Type", "text/plain")
 			if err != nil {
-				log.Println(err.Error())
+				log.Println("StatusCode:", req.Response.Status, err.Error())
 				return
 			}
 			r, err := client.Do(req)
@@ -135,21 +133,10 @@ func SendMetrics(client *http.Client, url string, duration int, wg *sync.WaitGro
 
 func main() {
 	parseFlags()
-	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
-		flagRunAddr = envRunAddr
-	}
-	if envRI := os.Getenv("REPORT_INTERVAL"); envRI != "" {
-		reportInterval, _ = strconv.Atoi(envRI)
-	}
-	if envPI := os.Getenv("POLL_INTERVAL"); envPI != "" {
-		pollInterval, _ = strconv.Atoi(envPI)
-	}
+	getEnv()
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go RunMonitor(pollInterval, &wg)
-	go SendMetrics(client, flagRunAddr, reportInterval, &wg)
-	wg.Wait()
+	go RunMonitor(pollInterval)
+	SendMetrics(client, reportInterval)
 }
