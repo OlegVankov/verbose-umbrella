@@ -116,7 +116,7 @@ func SendMetrics(client *http.Client, duration int) {
 			req.Header.Set("Host", serverAddr)
 			req.Header.Set("Content-Type", "text/plain")
 			if err != nil {
-				log.Println("StatusCode:", req.Response.Status, err.Error())
+				log.Println(err.Error())
 				return
 			}
 			r, err := client.Do(req)
@@ -124,6 +124,7 @@ func SendMetrics(client *http.Client, duration int) {
 				log.Println(err.Error())
 				return
 			}
+			log.Println("StatusCode:", r.StatusCode, r.Status)
 			r.Body.Close()
 		}
 
