@@ -14,20 +14,20 @@ var (
 
 func parseFlags() {
 	flag.StringVar(&serverAddr, "a", "localhost:8080", "адрес и порт сервера принимающего метрики")
-	flag.IntVar(&pollInterval, "p", 2, "частота отправки метрик на сервер")
-	flag.IntVar(&reportInterval, "r", 10, "частота опроса метрик")
+	flag.IntVar(&pollInterval, "p", 2, "частота опроса метрик")
+	flag.IntVar(&reportInterval, "r", 10, "частота отправки метрик на сервер")
 	flag.Parse()
 }
 
 func getEnv() {
-	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
-		serverAddr = envRunAddr
+	if envServerAddr := os.Getenv("ADDRESS"); envServerAddr != "" {
+		serverAddr = envServerAddr
 	}
-	if envRI := os.Getenv("REPORT_INTERVAL"); envRI != "" {
-		reportInterval, _ = strconv.Atoi(envRI)
+	if envReportInterval := os.Getenv("REPORT_INTERVAL"); envReportInterval != "" {
+		reportInterval, _ = strconv.Atoi(envReportInterval)
 	}
-	if envPI := os.Getenv("POLL_INTERVAL"); envPI != "" {
-		pollInterval, _ = strconv.Atoi(envPI)
+	if envPollInterval := os.Getenv("POLL_INTERVAL"); envPollInterval != "" {
+		pollInterval, _ = strconv.Atoi(envPollInterval)
 	}
 
 }

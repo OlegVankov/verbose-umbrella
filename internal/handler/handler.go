@@ -6,19 +6,19 @@ import (
 	"net/http"
 	"strconv"
 
-	stor "github.com/OlegVankov/verbose-umbrella/internal/storage"
+	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct {
 	Router  *chi.Mux
-	storage stor.Storage
+	storage storage.Storage
 }
 
 func NewHandler() Handler {
 	return Handler{
 		Router:  chi.NewRouter(),
-		storage: stor.NewStorage(),
+		storage: storage.NewStorage(),
 	}
 }
 
@@ -58,14 +58,14 @@ func (h *Handler) update(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		h.storage.UpdateCounter(name, stor.Counter(value))
+		h.storage.UpdateCounter(name, storage.Counter(value))
 	case "gauge":
 		value, err := strconv.ParseFloat(chi.URLParam(req, "value"), 64)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		h.storage.UpdateGauge(name, stor.Gauge(value))
+		h.storage.UpdateGauge(name, storage.Gauge(value))
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		return
