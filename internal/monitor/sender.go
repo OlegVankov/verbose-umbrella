@@ -8,6 +8,7 @@ import (
 
 func SendMetrics(client *http.Client, m *Monitor, addr string, reportInterval int) {
 	for {
+		<-time.After(time.Duration(reportInterval) * time.Second)
 		for _, url := range m.GetRoutes(addr) {
 			req, err := http.NewRequest(http.MethodPost, url, nil)
 			req.Header.Set("Host", addr)
@@ -24,6 +25,5 @@ func SendMetrics(client *http.Client, m *Monitor, addr string, reportInterval in
 			log.Printf("StatusCode: %s\n", r.Status)
 			r.Body.Close()
 		}
-		<-time.After(time.Duration(reportInterval) * time.Second)
 	}
 }
