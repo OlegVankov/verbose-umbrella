@@ -13,7 +13,7 @@ func TestMemStorage_UpdateGauge(t *testing.T) {
 
 	type args struct {
 		name string
-		val  Gauge
+		val  float64
 	}
 	tests := []struct {
 		name   string
@@ -39,7 +39,7 @@ func TestMemStorage_UpdateCounter(t *testing.T) {
 
 	type args struct {
 		name string
-		val  Counter
+		val  int64
 	}
 	tests := []struct {
 		name   string

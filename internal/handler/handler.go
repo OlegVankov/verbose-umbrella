@@ -58,14 +58,14 @@ func (h *Handler) update(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		h.storage.UpdateCounter(name, storage.Counter(value))
+		h.storage.UpdateCounter(name, value)
 	case "gauge":
 		value, err := strconv.ParseFloat(chi.URLParam(req, "value"), 64)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		h.storage.UpdateGauge(name, storage.Gauge(value))
+		h.storage.UpdateGauge(name, value)
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		return
