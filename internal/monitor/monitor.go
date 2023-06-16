@@ -97,3 +97,7 @@ func (m *Monitor) GetRoutes(serverAddr string) []string {
 	}
 	return urls
 }
+
+func (m *Monitor) resetPollCount() {
+	m.PollCount = 0
+}

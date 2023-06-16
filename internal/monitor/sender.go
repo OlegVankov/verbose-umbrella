@@ -25,5 +25,7 @@ func SendMetrics(client *http.Client, m *Monitor, addr string, reportInterval in
 			log.Printf("StatusCode: %s\n", r.Status)
 			r.Body.Close()
 		}
+		// обнулим pollCounter после отправки метрик
+		m.resetPollCount()
 	}
 }
