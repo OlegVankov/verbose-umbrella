@@ -2,7 +2,8 @@ package server
 
 import (
 	"context"
-	"log"
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -19,7 +20,9 @@ func (s *Server) Run(address string, handler http.Handler) error {
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 	}
-	log.Printf("server starting: %s", address)
+	logger.Log.Info("Running server",
+		zap.String("address", s.srv.Addr),
+	)
 	return s.srv.ListenAndServe()
 }
 

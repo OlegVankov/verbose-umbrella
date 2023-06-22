@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -23,13 +24,13 @@ func NewHandler() Handler {
 }
 
 func (h *Handler) SetRoute() {
-	h.Router.Get("/", h.home)
+	h.Router.Get("/", logger.RequestLogger(h.home))
 	h.Router.Route("/value", func(r chi.Router) {
-		r.Get("/gauge/{name}", h.valueGauge)
-		r.Get("/counter/{name}", h.valueCounter)
+		r.Get("/gauge/{name}", logger.RequestLogger(h.valueGauge))
+		r.Get("/counter/{name}", logger.RequestLogger(h.valueCounter))
 	})
 	h.Router.Route("/update", func(r chi.Router) {
-		r.Post("/{type}/{name}/{value}", h.update)
+		r.Post("/{type}/{name}/{value}", logger.RequestLogger(h.update))
 	})
 }
 
@@ -86,7 +87,7 @@ func (h *Handler) valueGauge(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	val := float64(value)
-	w.Write([]byte(fmt.Sprint(val)))
+	_, _ = w.Write([]byte(fmt.Sprint(val)))
 }
 
 func (h *Handler) valueCounter(w http.ResponseWriter, req *http.Request) {
@@ -100,5 +101,5 @@ func (h *Handler) valueCounter(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	val := int64(value)
-	w.Write([]byte(fmt.Sprint(val)))
+	_, _ = w.Write([]byte(fmt.Sprint(val)))
 }
