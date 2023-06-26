@@ -1,6 +1,8 @@
 package monitor
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 	"math/rand"
@@ -96,6 +98,34 @@ func (m *Monitor) GetRoutes(serverAddr string) []string {
 			serverAddr, "update", uri, typeField.Name, valueField.Interface()))
 	}
 	return urls
+}
+
+func (m *Monitor) GetBody() []*bytes.Buffer {
+	body := []*bytes.Buffer{}
+	val := reflect.ValueOf(m).Elem()
+	for i := 0; i < val.NumField(); i++ {
+		valueField := val.Field(i)
+		typeField := val.Type().Field(i)
+		mType := strings.ToLower(strings.Split(typeField.Type.String(), ".")[1])
+
+		metric := storage.Metrics{
+			ID:    typeField.Name,
+			MType: mType,
+		}
+
+		switch v := valueField.Interface().(type) {
+		case storage.Counter:
+			delta := storage.CounterToInt(v)
+			metric.Delta = &delta
+		case storage.Gauge:
+			value := storage.GaugeToFloat(v)
+			metric.Value = &value
+		}
+
+		data, _ := json.Marshal(&metric)
+		body = append(body, bytes.NewBuffer(data))
+	}
+	return body
 }
 
 func (m *Monitor) resetPollCount() {

@@ -20,8 +20,6 @@ func main() {
 	}
 
 	if err := srv.Run(serverAddr, handler.Router); err != nil {
-		logger.Log.Fatal(err.Error(),
-			zap.String("event", "start server"),
-		)
+		logger.Log.Fatal(err.Error(), zap.String("event", "start server"))
 	}
 }
