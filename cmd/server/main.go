@@ -15,7 +15,7 @@ func main() {
 
 	srv := server.Server{}
 
-	if err := logger.Initialize("info"); err != nil {
+	if err := logger.Initialize(level); err != nil {
 		panic(err)
 	}
 

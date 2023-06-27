@@ -34,46 +34,39 @@ func (h *Handler) SetRoute() {
 		r.Get("/counter/{name}", logger.RequestLogger(h.valueCounter))
 	})
 	h.Router.Route("/update", func(r chi.Router) {
-		r.Post("/", logger.RequestLogger(h.update2))
+		r.Post("/", logger.RequestLogger(h.updateJSON))
 		r.Post("/{type}/{name}/{value}", logger.RequestLogger(h.update))
 	})
 }
 
 func (h *Handler) value(w http.ResponseWriter, r *http.Request) {
-	var buf bytes.Buffer
+	decoder := json.NewDecoder(r.Body)
 	var metric storage.Metrics
-	_, err := buf.ReadFrom(r.Body)
-	if err != nil {
+
+	if err := decoder.Decode(&metric); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		logger.Log.Info("Error", zap.Error(err))
 		return
 	}
-	if err := json.Unmarshal(buf.Bytes(), &metric); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+
 	switch metric.MType {
 	case "counter":
-		delta, _ := h.storage.GetCounter(metric.ID)
-		metric.Delta = (*int64)(&delta)
+		val, _ := h.storage.GetCounter(metric.ID)
+		delta := int64(val)
+		metric.Delta = &delta
 	case "gauge":
-		value, _ := h.storage.GetGauge(metric.ID)
-		metric.Value = (*float64)(&value)
-	default:
-		w.WriteHeader(http.StatusBadRequest)
+		val, _ := h.storage.GetGauge(metric.ID)
+		value := float64(val)
+		metric.Value = &value
 	}
-	resp, err := json.Marshal(metric)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	logger.Log.Info("/value request:", zap.ByteString("body", buf.Bytes()))
-	logger.Log.Info("/value response:", zap.ByteString("body", resp))
-	_, _ = w.Write(resp)
+	logger.Log.Warn("value", zap.Any("metric", metric))
+	json.NewEncoder(w).Encode(metric)
 }
 
-func (h *Handler) update2(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) updateJSON(w http.ResponseWriter, req *http.Request) {
 	var buf bytes.Buffer
 	var metric storage.Metrics
 	_, err := buf.ReadFrom(req.Body)
@@ -85,26 +78,28 @@ func (h *Handler) update2(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	switch metric.MType {
 	case "counter":
-		h.storage.UpdateCounter(metric.ID, *metric.Delta)
-		delta, _ := h.storage.GetCounter(metric.ID)
-		*metric.Delta = storage.CounterToInt(delta)
+		delta := storage.CounterToInt(h.storage.UpdateCounter(metric.ID, *metric.Delta))
+		metric.Delta = &delta
 	case "gauge":
 		h.storage.UpdateGauge(metric.ID, *metric.Value)
 	default:
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
+
 	resp, err := json.Marshal(metric)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	logger.Log.Info("/update request:", zap.ByteString("body", buf.Bytes()))
-	logger.Log.Info("/update response:", zap.ByteString("body", resp))
-	_, _ = w.Write(resp)
+	logger.Log.Warn("/update", zap.ByteString("request", buf.Bytes()), zap.ByteString("response", resp))
+	json.NewEncoder(w).Encode(metric)
 }
 
 func (h *Handler) home(w http.ResponseWriter, req *http.Request) {

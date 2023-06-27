@@ -1,19 +1,19 @@
 package main
 
 import (
-	"net/http"
-	"time"
-
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	mtr "github.com/OlegVankov/verbose-umbrella/internal/monitor"
+	"go.uber.org/zap"
 )
 
 func main() {
 	parseFlags()
 	getEnv()
-	monitor := mtr.NewMonitor()
-	client := &http.Client{
-		Timeout: 10 * time.Second,
+	if err := logger.Initialize(level); err != nil {
+		panic(err)
 	}
+	monitor := mtr.NewMonitor()
+	logger.Log.Info("Running agent", zap.String("sender", serverAddr))
 	go monitor.RunMonitor(pollInterval)
-	mtr.SendMetrics(client, monitor, serverAddr, reportInterval)
+	mtr.SendMetrics(monitor, serverAddr, reportInterval)
 }

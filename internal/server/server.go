@@ -20,9 +20,7 @@ func (s *Server) Run(address string, handler http.Handler) error {
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 	}
-	logger.Log.Info("Running server",
-		zap.String("address", s.srv.Addr),
-	)
+	logger.Log.Info("Running server", zap.String("address", s.srv.Addr))
 	return s.srv.ListenAndServe()
 }
 

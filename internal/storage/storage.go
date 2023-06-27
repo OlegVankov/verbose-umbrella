@@ -14,7 +14,7 @@ func GaugeToFloat(gauge Gauge) float64 {
 
 type Storage interface {
 	UpdateGauge(name string, val float64)
-	UpdateCounter(name string, val int64)
+	UpdateCounter(name string, val int64) Counter
 	GetGauge(name string) (Gauge, bool)
 	GetCounter(name string) (Counter, bool)
 	GetGaugeAll() map[string]Gauge
@@ -37,8 +37,9 @@ func (m *MemStorage) UpdateGauge(name string, val float64) {
 	m.Gauge[name] = Gauge(val)
 }
 
-func (m *MemStorage) UpdateCounter(name string, val int64) {
+func (m *MemStorage) UpdateCounter(name string, val int64) Counter {
 	m.Counter[name] += Counter(val)
+	return m.Counter[name]
 }
 
 func (m *MemStorage) GetGauge(name string) (Gauge, bool) {
