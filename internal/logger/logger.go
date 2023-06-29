@@ -1,9 +1,11 @@
 package logger
 
 import (
-	"go.uber.org/zap"
 	"net/http"
 	"time"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
@@ -40,6 +42,9 @@ func Initialize(level string) error {
 	}
 	cfg := zap.NewProductionConfig()
 	cfg.Level = lvl
+	cfg.EncoderConfig.TimeKey = "time"
+	cfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+	//cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	zl, err := cfg.Build()
 	if err != nil {
 		return err
@@ -48,7 +53,7 @@ func Initialize(level string) error {
 	return nil
 }
 
-func RequestLogger(h http.HandlerFunc) http.HandlerFunc {
+func RequestLogger(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -64,12 +69,10 @@ func RequestLogger(h http.HandlerFunc) http.HandlerFunc {
 
 		h.ServeHTTP(&lw, r)
 
-		duration := time.Since(start)
-
 		Log.Info("got incoming HTTP request",
 			zap.String("URI", r.RequestURI),
 			zap.String("method", r.Method),
-			zap.Duration("duration", duration),
+			zap.Duration("duration", time.Since(start)),
 		)
 
 		Log.Info("got incoming HTTP response",

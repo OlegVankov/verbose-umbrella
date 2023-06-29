@@ -2,10 +2,11 @@ package server
 
 import (
 	"context"
-	"github.com/OlegVankov/verbose-umbrella/internal/logger"
-	"go.uber.org/zap"
 	"net/http"
 	"time"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
+	"go.uber.org/zap"
 )
 
 type Server struct {

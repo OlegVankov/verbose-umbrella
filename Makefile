@@ -68,5 +68,13 @@ mtest7: build
 		-server-port=${SERVER_PORT} \
 		-source-path=.
 
+.PHONY: mtest8
+mtest8: build
+	@metricstest -test.v -test.run="^TestIteration8$$" \
+		-agent-binary-path=${AGENT_PATH} \
+		-binary-path=${SERVER_PATH} \
+		-server-port=${SERVER_PORT} \
+		-source-path=.
+
 .PHONY: default
-default: clean build mtest1 mtest2 mtest3 mtest4 mtest5 mtest6 mtest7
+default: clean build mtest1 mtest2 mtest3 mtest4 mtest5 mtest6 mtest7 mtest8

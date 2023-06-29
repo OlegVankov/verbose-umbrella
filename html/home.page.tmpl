@@ -4,18 +4,19 @@
         <meta charset='utf-8'>
     </head>
     <body>
+        {{ if . }}
         <ul>
-        {{ with Storage }}
             {{ range $key, $val := .GetGaugeAll }}
                 <li>{{ $key }}: {{ $val }}</li>
             {{ end }}
-
         </ul>
-            <ul>
+        <ul>
             {{ range $key, $val := .GetCounterAll }}
                 <li>{{ $key }}: {{ $val }}</li>
             {{ end }}
-        {{ end }}
         </ul>
+        {{ else }}
+        <p>not data<p>
+        {{ end }}
     </body>
 </html>

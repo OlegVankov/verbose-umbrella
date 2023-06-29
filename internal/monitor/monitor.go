@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"github.com/OlegVankov/verbose-umbrella/internal/storage"
@@ -82,6 +83,7 @@ func (m *Monitor) RunMonitor(pollInterval int) {
 		m.StackSys = storage.Gauge(rtm.StackSys)
 		m.Sys = storage.Gauge(rtm.Sys)
 		m.TotalAlloc = storage.Gauge(rtm.TotalAlloc)
+		m.RandomValue = storage.Gauge(rand.Float64())
 		m.PollCount++ // делаем инкремент каждые pollInterval секунд
 		<-time.After(time.Duration(pollInterval) * time.Second)
 	}
@@ -123,7 +125,11 @@ func (m *Monitor) GetBody() []*bytes.Buffer {
 		}
 
 		data, _ := json.Marshal(&metric)
-		body = append(body, bytes.NewBuffer(data))
+		var buf bytes.Buffer
+		g := gzip.NewWriter(&buf)
+		g.Write(data)
+		g.Close()
+		body = append(body, &buf)
 	}
 	return body
 }

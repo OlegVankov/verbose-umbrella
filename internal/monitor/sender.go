@@ -1,11 +1,12 @@
 package monitor
 
 import (
+	"time"
+
 	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
-	"time"
 )
 
 func SendMetrics(m *Monitor, addr string, reportInterval int) {
@@ -19,14 +20,28 @@ func SendMetrics(m *Monitor, addr string, reportInterval int) {
 
 			resp, err := client.R().
 				SetHeader("Content-Type", "application/json").
+				SetHeader("Accept-Encoding", "gzip").
+				SetHeader("Content-Encoding", "gzip").
 				SetBody(body).
 				SetResult(&metric).
 				Post(url)
 
 			if err != nil {
 				logger.Log.Error("resty request error", zap.Error(err))
-				break
+				continue
 			}
+
+			//logger.Log.Info("Header", zap.String("content-encoding", resp.Header().Get("Content-Encoding")))
+
+			//if resp.Header().Get("Content-Encoding") == "gzip" {
+			//	g, err := gzip.NewReader(resp.RawBody())
+			//	if err != nil {
+			//		logger.Log.Error("gzip reader error", zap.Error(err))
+			//		continue
+			//	}
+			//	json.NewDecoder(g).Decode(&metric)
+			//	g.Close()
+			//}
 
 			logger.Log.Info("SendMetric", zap.String("URL", resp.Request.URL),
 				zap.String("body", resp.String()),
