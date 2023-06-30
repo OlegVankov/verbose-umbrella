@@ -42,7 +42,11 @@ func (h *Handler) SaveStorage(fileStoragePath string, storeInterval int) {
 	for {
 		<-time.After(time.Duration(storeInterval) * time.Second)
 
-		file, _ := os.OpenFile(fileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		file, err := os.OpenFile(fileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		if err != nil {
+			logger.Log.Error("error open file", zap.String("file name", fileStoragePath), zap.Error(err))
+			return
+		}
 
 		for k, v := range h.storage.GetGaugeAll() {
 			value := storage.GaugeToFloat(v)
@@ -84,7 +88,12 @@ func (h *Handler) RestoreStorage(fileStoragePath string) error {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		var metric storage.Metrics
-		_ = json.Unmarshal(scanner.Bytes(), &metric)
+		err := json.Unmarshal(scanner.Bytes(), &metric)
+		if err != nil {
+			logger.Log.Warn("restore storage: json unmarshal",
+				zap.Error(err))
+			continue
+		}
 		switch metric.MType {
 		case "counter":
 			h.storage.UpdateCounter(metric.ID, *metric.Delta)
