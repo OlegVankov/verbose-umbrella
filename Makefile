@@ -1,6 +1,7 @@
 SERVER_PORT=8080
 AGENT_PATH=./agent
 SERVER_PATH=./server
+TEMP_FILE=/tmp/metric-server-storage.json
 ADDRESS="127.0.0.1:${SERVER_PORT}"
 
 .DEFAULT_GOAL := default
@@ -76,5 +77,14 @@ mtest8: build
 		-server-port=${SERVER_PORT} \
 		-source-path=.
 
+.PHONY: mtest9
+mtest9: build
+	@metricstest -test.v -test.run="^TestIteration9$$" \
+		-agent-binary-path=${AGENT_PATH} \
+		-binary-path=${SERVER_PATH} \
+		-file-storage-path=${TEMP_FILE} \
+		-server-port=${SERVER_PORT} \
+		-source-path=.
+
 .PHONY: default
-default: clean build mtest1 mtest2 mtest3 mtest4 mtest5 mtest6 mtest7 mtest8
+default: clean build mtest1 mtest2 mtest3 mtest4 mtest5 mtest6 mtest7 mtest8 mtest9

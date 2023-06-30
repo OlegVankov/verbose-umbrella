@@ -1,10 +1,16 @@
 package main
 
 import (
+	"context"
 	hdl "github.com/OlegVankov/verbose-umbrella/internal/handler"
 	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"github.com/OlegVankov/verbose-umbrella/internal/server"
 	"go.uber.org/zap"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -12,14 +18,30 @@ func main() {
 
 	handler := hdl.NewHandler()
 	handler.SetRoute()
-
 	srv := server.Server{}
 
 	if err := logger.Initialize(level); err != nil {
 		panic(err)
 	}
-
-	if err := srv.Run(serverAddr, handler.Router); err != nil {
-		logger.Log.Fatal(err.Error(), zap.String("event", "start server"))
+	if restore {
+		if err := handler.RestoreStorage(fileStoragePath); err != nil {
+			panic(err)
+		}
 	}
+	go handler.SaveStorage(fileStoragePath, storeInterval)
+
+	go func() {
+		err := srv.Run(serverAddr, handler.Router)
+		if err != nil && err == http.ErrServerClosed {
+			logger.Log.Fatal(err.Error(), zap.String("event", "start server"))
+		}
+	}()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+	<-c
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	_ = srv.Shutdown(ctx)
 }

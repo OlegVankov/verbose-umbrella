@@ -2,10 +2,11 @@ package handler
 
 import (
 	"compress/gzip"
-	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"strings"
+
+	"go.uber.org/zap"
 
 	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 )

@@ -5,12 +5,13 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 	"math/rand"
 	"reflect"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 )
 
 type Monitor struct {
