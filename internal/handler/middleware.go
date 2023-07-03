@@ -12,27 +12,19 @@ import (
 )
 
 type gzipWriter struct {
-	rw http.ResponseWriter
+	http.ResponseWriter
 	gw *gzip.Writer
 }
 
 func newGzipWriter(rw http.ResponseWriter) *gzipWriter {
 	return &gzipWriter{
-		rw: rw,
-		gw: gzip.NewWriter(rw),
+		ResponseWriter: rw,
+		gw:             gzip.NewWriter(rw),
 	}
-}
-
-func (g *gzipWriter) Header() http.Header {
-	return g.rw.Header()
 }
 
 func (g *gzipWriter) Write(bytes []byte) (int, error) {
 	return g.gw.Write(bytes)
-}
-
-func (g *gzipWriter) WriteHeader(statusCode int) {
-	g.rw.WriteHeader(statusCode)
 }
 
 func (g *gzipWriter) Close() error {
@@ -69,23 +61,11 @@ func (g *gzipReader) Close() error {
 
 func compressMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		nw := w
-		contentType := strings.Join(r.Header.Values("Content-Type"), ",")
+		writer := w
 		contentEncoding := strings.Join(r.Header.Values("Content-Encoding"), ",")
 		acceptEncoding := strings.Join(r.Header.Values("Accept-Encoding"), ",")
-		accept := strings.Join(r.Header.Values("Accept"), ",")
-
-		if strings.Contains(acceptEncoding, "gzip") &&
-			(strings.Contains(contentType, "application/json") || strings.Contains(contentType, "text/html") || strings.Contains(accept, "html/text")) {
-			logger.Log.Info("gzip writer", zap.String("Accept-Encoding", acceptEncoding), zap.String("Content-Type", contentType))
-			w.Header().Set("Content-Encoding", "gzip")
-			gw := newGzipWriter(w)
-			defer gw.Close()
-			nw = gw
-		}
 
 		if strings.Contains(contentEncoding, "gzip") {
-			logger.Log.Info("gzip reader", zap.String("Content-Encoding", contentEncoding))
 			body, err := newGzipReader(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -95,6 +75,14 @@ func compressMiddleware(h http.Handler) http.Handler {
 			defer body.Close()
 		}
 
-		h.ServeHTTP(nw, r)
+		if strings.Contains(acceptEncoding, "gzip") {
+			logger.Log.Info("Middleware compress", zap.Strings("Content-Type", writer.Header().Values("Content-Type")))
+			w.Header().Set("Content-Encoding", "gzip")
+			gz := newGzipWriter(w)
+			writer = gz
+			defer gz.Close()
+		}
+
+		h.ServeHTTP(writer, r)
 	})
 }

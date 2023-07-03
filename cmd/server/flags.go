@@ -15,7 +15,7 @@ var (
 )
 
 func parseFlags() {
-	flag.StringVar(&serverAddr, "a", "127.0.0.1:8080", "адрес и порт сервера")
+	flag.StringVar(&serverAddr, "a", "localhost:8080", "адрес и порт сервера")
 	flag.IntVar(&storeInterval, "i", 300, "время (в секундах), по истечении которого текущие показания сервера сохраняются на диск")
 	flag.StringVar(&fileStoragePath, "f", "/tmp/metrics-db.json", "файл, куда сохраняются текущие значения")
 	flag.BoolVar(&restore, "r", true, "загружать или нет сохранённые значения из файла при старте сервера")

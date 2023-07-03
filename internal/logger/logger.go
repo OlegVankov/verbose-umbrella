@@ -78,6 +78,8 @@ func RequestLogger(h http.Handler) http.Handler {
 		Log.Info("got incoming HTTP response",
 			zap.Int("status", responseData.status),
 			zap.Int("size", responseData.size),
+			zap.Strings("Content-Encoding", lw.Header().Values("Content-Encoding")),
+			zap.Strings("Accept-Encoding", lw.Header().Values("Accept-Encoding")),
 		)
 	})
 }

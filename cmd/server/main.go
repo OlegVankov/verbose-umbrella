@@ -2,15 +2,16 @@ package main
 
 import (
 	"context"
-	hdl "github.com/OlegVankov/verbose-umbrella/internal/handler"
-	"github.com/OlegVankov/verbose-umbrella/internal/logger"
-	"github.com/OlegVankov/verbose-umbrella/internal/server"
-	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	hdl "github.com/OlegVankov/verbose-umbrella/internal/handler"
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
+	"github.com/OlegVankov/verbose-umbrella/internal/server"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -24,11 +25,11 @@ func main() {
 		panic(err)
 	}
 	if restore {
-		if err := handler.RestoreStorage(fileStoragePath); err != nil {
+		if err := handler.Storage.RestoreStorage(fileStoragePath); err != nil {
 			panic(err)
 		}
 	}
-	go handler.SaveStorage(fileStoragePath, storeInterval)
+	go handler.Storage.SaveStorage(fileStoragePath, storeInterval)
 
 	go func() {
 		err := srv.Run(serverAddr, handler.Router)

@@ -19,6 +19,8 @@ type Storage interface {
 	GetCounter(name string) (Counter, bool)
 	GetGaugeAll() map[string]Gauge
 	GetCounterAll() map[string]Counter
+	SaveStorage(fileStoragePath string, storeInterval int)
+	RestoreStorage(fileStoragePath string) error
 }
 
 type MemStorage struct {

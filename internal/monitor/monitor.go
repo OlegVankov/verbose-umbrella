@@ -11,7 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"github.com/OlegVankov/verbose-umbrella/internal/storage"
+	"go.uber.org/zap"
 )
 
 type Monitor struct {
@@ -125,16 +127,23 @@ func (m *Monitor) GetBody() []*bytes.Buffer {
 			metric.Value = &value
 		}
 
-		data, _ := json.Marshal(&metric)
-		var buf bytes.Buffer
-		g := gzip.NewWriter(&buf)
-		g.Write(data)
-		g.Close()
-		body = append(body, &buf)
+		body = append(body, gzipBody(&metric))
 	}
 	return body
 }
 
 func (m *Monitor) resetPollCount() {
 	m.PollCount = 0
+}
+
+func gzipBody(m *storage.Metrics) *bytes.Buffer {
+	data, err := json.Marshal(m)
+	if err != nil {
+		logger.Log.Warn("JSON Marshal", zap.Error(err))
+	}
+	var buf bytes.Buffer
+	g := gzip.NewWriter(&buf)
+	g.Write(data)
+	g.Close()
+	return &buf
 }

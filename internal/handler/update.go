@@ -27,10 +27,10 @@ func (h *Handler) updateJSON(w http.ResponseWriter, req *http.Request) {
 
 	switch metric.MType {
 	case "counter":
-		delta := storage.CounterToInt(h.storage.UpdateCounter(metric.ID, *metric.Delta))
+		delta := storage.CounterToInt(h.Storage.UpdateCounter(metric.ID, *metric.Delta))
 		metric.Delta = &delta
 	case "gauge":
-		h.storage.UpdateGauge(metric.ID, *metric.Value)
+		h.Storage.UpdateGauge(metric.ID, *metric.Value)
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -59,14 +59,14 @@ func (h *Handler) update(w http.ResponseWriter, req *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		h.storage.UpdateCounter(name, value)
+		h.Storage.UpdateCounter(name, value)
 	case "gauge":
 		value, err := strconv.ParseFloat(chi.URLParam(req, "value"), 64)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		h.storage.UpdateGauge(name, value)
+		h.Storage.UpdateGauge(name, value)
 	default:
 		w.WriteHeader(http.StatusBadRequest)
 		return
