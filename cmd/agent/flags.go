@@ -4,6 +4,9 @@ import (
 	"flag"
 	"os"
 	"strconv"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
+	"go.uber.org/zap"
 )
 
 var (
@@ -26,9 +29,17 @@ func getEnv() {
 		serverAddr = envServerAddr
 	}
 	if envReportInterval := os.Getenv("REPORT_INTERVAL"); envReportInterval != "" {
-		reportInterval, _ = strconv.Atoi(envReportInterval)
+		var err error
+		reportInterval, err = strconv.Atoi(envReportInterval)
+		if err != nil {
+			logger.Log.Fatal("Get ENV REPORT_INTERVAL", zap.Error(err))
+		}
 	}
 	if envPollInterval := os.Getenv("POLL_INTERVAL"); envPollInterval != "" {
-		pollInterval, _ = strconv.Atoi(envPollInterval)
+		var err error
+		pollInterval, err = strconv.Atoi(envPollInterval)
+		if err != nil {
+			logger.Log.Fatal("Get ENV POLL_INTERVAL", zap.Error(err))
+		}
 	}
 }

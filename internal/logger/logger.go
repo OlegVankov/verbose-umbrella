@@ -80,6 +80,7 @@ func RequestLogger(h http.Handler) http.Handler {
 			zap.Int("size", responseData.size),
 			zap.Strings("Content-Encoding", lw.Header().Values("Content-Encoding")),
 			zap.Strings("Accept-Encoding", lw.Header().Values("Accept-Encoding")),
+			zap.Strings("Content-Type", lw.Header().Values("Content-Type")),
 		)
 	})
 }

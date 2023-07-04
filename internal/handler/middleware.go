@@ -17,18 +17,21 @@ type gzipWriter struct {
 }
 
 func newGzipWriter(rw http.ResponseWriter) *gzipWriter {
-	return &gzipWriter{
-		ResponseWriter: rw,
-		gw:             gzip.NewWriter(rw),
+	return &gzipWriter{rw, gzip.NewWriter(rw)}
+}
+
+func (w *gzipWriter) Write(b []byte) (int, error) {
+	contentType := strings.Join(w.Header().Values("Content-Type"), ",")
+	gzipAccept := strings.Contains(contentType, "application/json") || strings.Contains(contentType, "text/html")
+	if gzipAccept {
+		w.Header().Set("Content-Encoding", "gzip")
+		return w.gw.Write(b)
 	}
+	return len(b), nil
 }
 
-func (g *gzipWriter) Write(bytes []byte) (int, error) {
-	return g.gw.Write(bytes)
-}
-
-func (g *gzipWriter) Close() error {
-	return g.gw.Close()
+func (w *gzipWriter) Close() error {
+	return w.gw.Close()
 }
 
 type gzipReader struct {
@@ -61,28 +64,27 @@ func (g *gzipReader) Close() error {
 
 func compressMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		writer := w
 		contentEncoding := strings.Join(r.Header.Values("Content-Encoding"), ",")
-		acceptEncoding := strings.Join(r.Header.Values("Accept-Encoding"), ",")
-
 		if strings.Contains(contentEncoding, "gzip") {
 			body, err := newGzipReader(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
-			r.Body = body
 			defer body.Close()
+			r.Body = body
 		}
 
-		if strings.Contains(acceptEncoding, "gzip") {
-			logger.Log.Info("Middleware compress", zap.Strings("Content-Type", writer.Header().Values("Content-Type")))
-			w.Header().Set("Content-Encoding", "gzip")
-			gz := newGzipWriter(w)
-			writer = gz
-			defer gz.Close()
+		acceptEncoding := strings.Join(r.Header.Values("Accept-Encoding"), ",")
+		if !strings.Contains(acceptEncoding, "gzip") {
+			h.ServeHTTP(w, r)
+			return
 		}
 
-		h.ServeHTTP(writer, r)
+		writer := newGzipWriter(w)
+		defer writer.Close()
+		w = writer
+
+		h.ServeHTTP(w, r)
 	})
 }

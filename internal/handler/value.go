@@ -33,9 +33,11 @@ func (h *Handler) value(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	//w.WriteHeader(http.StatusOK)
 	logger.Log.Warn("value", zap.Any("metric", metric))
-	json.NewEncoder(w).Encode(metric)
+	if err := json.NewEncoder(w).Encode(metric); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 func (h *Handler) valueGauge(w http.ResponseWriter, req *http.Request) {
@@ -46,10 +48,10 @@ func (h *Handler) valueGauge(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "plain/text")
-	w.WriteHeader(http.StatusOK)
+	//w.WriteHeader(http.StatusOK)
 
 	val := float64(value)
-	_, _ = w.Write([]byte(fmt.Sprint(val)))
+	w.Write([]byte(fmt.Sprint(val)))
 }
 
 func (h *Handler) valueCounter(w http.ResponseWriter, req *http.Request) {
@@ -60,8 +62,8 @@ func (h *Handler) valueCounter(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "plain/text")
-	w.WriteHeader(http.StatusOK)
+	//w.WriteHeader(http.StatusOK)
 
 	val := int64(value)
-	_, _ = w.Write([]byte(fmt.Sprint(val)))
+	w.Write([]byte(fmt.Sprint(val)))
 }

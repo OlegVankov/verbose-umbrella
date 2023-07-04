@@ -4,6 +4,9 @@ import (
 	"flag"
 	"os"
 	"strconv"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
+	"go.uber.org/zap"
 )
 
 var (
@@ -26,12 +29,20 @@ func parseFlags() {
 		serverAddr = envRunAddr
 	}
 	if envStoreInterval := os.Getenv("STORE_INTERVAL"); envStoreInterval != "" {
-		storeInterval, _ = strconv.Atoi(envStoreInterval)
+		var err error
+		storeInterval, err = strconv.Atoi(envStoreInterval)
+		if err != nil {
+			logger.Log.Fatal("Get ENV STORE_INTERVAL", zap.Error(err))
+		}
 	}
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
 		fileStoragePath = envFileStoragePath
 	}
 	if envRestore := os.Getenv("RESTORE"); envRestore != "" {
-		restore, _ = strconv.ParseBool(envRestore)
+		var err error
+		restore, err = strconv.ParseBool(envRestore)
+		if err != nil {
+			logger.Log.Fatal("Get ENV RESTORE", zap.Error(err))
+		}
 	}
 }

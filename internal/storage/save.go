@@ -31,8 +31,8 @@ func (m *MemStorage) SaveStorage(fileStoragePath string, storeInterval int) {
 				logger.Log.Warn("Save storage marshal JSON", zap.Error(err))
 				continue
 			}
-			_, _ = file.Write(data)
-			_, _ = file.Write([]byte("\n"))
+			file.Write(data)
+			file.Write([]byte("\n"))
 		}
 
 		for k, v := range m.GetCounterAll() {
@@ -47,11 +47,11 @@ func (m *MemStorage) SaveStorage(fileStoragePath string, storeInterval int) {
 				logger.Log.Warn("Save storage marshal JSON", zap.Error(err))
 				continue
 			}
-			_, _ = file.Write(data)
-			_, _ = file.Write([]byte("\n"))
+			file.Write(data)
+			file.Write([]byte("\n"))
 		}
 
-		_ = file.Close()
+		file.Close()
 
 		logger.Log.Info("save storage", zap.String("file", fileStoragePath))
 	}

@@ -43,7 +43,7 @@ func (h *Handler) updateJSON(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	//w.WriteHeader(http.StatusOK)
 	logger.Log.Warn("/update", zap.ByteString("request", buf.Bytes()), zap.ByteString("response", resp))
 	json.NewEncoder(w).Encode(metric)
 }
@@ -73,5 +73,5 @@ func (h *Handler) update(w http.ResponseWriter, req *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "plain/text")
-	w.WriteHeader(http.StatusOK)
+	//w.WriteHeader(http.StatusOK)
 }

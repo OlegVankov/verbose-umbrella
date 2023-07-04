@@ -31,18 +31,6 @@ func SendMetrics(m *Monitor, addr string, reportInterval int) {
 				continue
 			}
 
-			//logger.Log.Info("Header", zap.String("content-encoding", resp.Header().Get("Content-Encoding")))
-
-			//if resp.Header().Get("Content-Encoding") == "gzip" {
-			//	g, err := gzip.NewReader(resp.RawBody())
-			//	if err != nil {
-			//		logger.Log.Error("gzip reader error", zap.Error(err))
-			//		continue
-			//	}
-			//	json.NewDecoder(g).Decode(&metric)
-			//	g.Close()
-			//}
-
 			logger.Log.Info("SendMetric", zap.String("URL", resp.Request.URL),
 				zap.String("body", resp.String()),
 				zap.String("StatusCode", resp.Status()),

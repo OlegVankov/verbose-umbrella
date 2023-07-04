@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"compress/gzip"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -13,10 +14,13 @@ import (
 func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.Response, string) {
 	req, err := http.NewRequest(method, ts.URL+path, nil)
 	require.NoError(t, err)
+	req.Header.Set("Accept-Encoding", "gzip")
 	resp, err := ts.Client().Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	zr, err := gzip.NewReader(resp.Body)
+	require.NoError(t, err)
+	body, err := io.ReadAll(zr)
 	require.NoError(t, err)
 	return resp, string(body)
 }
