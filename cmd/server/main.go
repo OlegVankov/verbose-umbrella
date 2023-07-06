@@ -8,10 +8,11 @@ import (
 	"syscall"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/OlegVankov/verbose-umbrella/internal/handler"
 	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"github.com/OlegVankov/verbose-umbrella/internal/server"
-	"go.uber.org/zap"
 )
 
 func main() {

@@ -11,9 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"github.com/OlegVankov/verbose-umbrella/internal/storage"
-	"go.uber.org/zap"
 )
 
 type Monitor struct {

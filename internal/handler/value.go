@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/OlegVankov/verbose-umbrella/internal/logger"
-	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
+	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 )
 
 func (h *Handler) value(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +34,6 @@ func (h *Handler) value(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	//w.WriteHeader(http.StatusOK)
 	logger.Log.Warn("value", zap.Any("metric", metric))
 	if err := json.NewEncoder(w).Encode(metric); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -48,7 +48,6 @@ func (h *Handler) valueGauge(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "plain/text")
-	//w.WriteHeader(http.StatusOK)
 
 	val := float64(value)
 	w.Write([]byte(fmt.Sprint(val)))
@@ -62,7 +61,6 @@ func (h *Handler) valueCounter(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "plain/text")
-	//w.WriteHeader(http.StatusOK)
 
 	val := int64(value)
 	w.Write([]byte(fmt.Sprint(val)))

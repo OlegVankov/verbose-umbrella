@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"go.uber.org/zap"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 )
 
 func (m *MemStorage) RestoreStorage(fileStoragePath string) error {

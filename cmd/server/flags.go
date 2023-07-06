@@ -5,8 +5,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"go.uber.org/zap"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 )
 
 var (

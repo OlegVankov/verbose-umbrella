@@ -3,10 +3,11 @@ package monitor
 import (
 	"time"
 
-	"github.com/OlegVankov/verbose-umbrella/internal/logger"
-	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 	"github.com/go-resty/resty/v2"
 	"go.uber.org/zap"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
+	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 )
 
 func SendMetrics(m *Monitor, addr string, reportInterval int) {

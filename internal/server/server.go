@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"go.uber.org/zap"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 )
 
 type Server struct {

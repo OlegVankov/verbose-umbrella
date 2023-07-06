@@ -5,8 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"go.uber.org/zap"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 )
 
 func (m *MemStorage) SaveStorage(fileStoragePath string, storeInterval int) {

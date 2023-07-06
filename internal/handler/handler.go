@@ -1,9 +1,10 @@
 package handler
 
 import (
+	"github.com/go-chi/chi/v5"
+
 	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"github.com/OlegVankov/verbose-umbrella/internal/storage"
-	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct {

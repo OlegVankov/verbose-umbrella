@@ -4,8 +4,9 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"go.uber.org/zap"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 )
 
 func (h *Handler) home(w http.ResponseWriter, req *http.Request) {

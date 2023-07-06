@@ -1,9 +1,10 @@
 package main
 
 import (
+	"go.uber.org/zap"
+
 	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"github.com/OlegVankov/verbose-umbrella/internal/monitor"
-	"go.uber.org/zap"
 )
 
 func main() {
