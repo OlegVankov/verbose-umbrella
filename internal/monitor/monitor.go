@@ -1,13 +1,20 @@
 package monitor
 
 import (
+	"bytes"
+	"compress/gzip"
+	"encoding/json"
 	"fmt"
-	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 	"math/rand"
 	"reflect"
 	"runtime"
 	"strings"
 	"time"
+
+	"go.uber.org/zap"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
+	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 )
 
 type Monitor struct {
@@ -80,6 +87,7 @@ func (m *Monitor) RunMonitor(pollInterval int) {
 		m.StackSys = storage.Gauge(rtm.StackSys)
 		m.Sys = storage.Gauge(rtm.Sys)
 		m.TotalAlloc = storage.Gauge(rtm.TotalAlloc)
+		m.RandomValue = storage.Gauge(rand.Float64())
 		m.PollCount++ // делаем инкремент каждые pollInterval секунд
 		<-time.After(time.Duration(pollInterval) * time.Second)
 	}
@@ -98,6 +106,45 @@ func (m *Monitor) GetRoutes(serverAddr string) []string {
 	return urls
 }
 
+func (m *Monitor) GetBody() []*bytes.Buffer {
+	body := []*bytes.Buffer{}
+	val := reflect.ValueOf(m).Elem()
+	for i := 0; i < val.NumField(); i++ {
+		valueField := val.Field(i)
+		typeField := val.Type().Field(i)
+		mType := strings.ToLower(strings.Split(typeField.Type.String(), ".")[1])
+
+		metric := storage.Metrics{
+			ID:    typeField.Name,
+			MType: mType,
+		}
+
+		switch v := valueField.Interface().(type) {
+		case storage.Counter:
+			delta := storage.CounterToInt(v)
+			metric.Delta = &delta
+		case storage.Gauge:
+			value := storage.GaugeToFloat(v)
+			metric.Value = &value
+		}
+
+		body = append(body, gzipBody(&metric))
+	}
+	return body
+}
+
 func (m *Monitor) resetPollCount() {
 	m.PollCount = 0
+}
+
+func gzipBody(m *storage.Metrics) *bytes.Buffer {
+	data, err := json.Marshal(m)
+	if err != nil {
+		logger.Log.Warn("JSON Marshal", zap.Error(err))
+	}
+	var buf bytes.Buffer
+	g := gzip.NewWriter(&buf)
+	g.Write(data)
+	g.Close()
+	return &buf
 }

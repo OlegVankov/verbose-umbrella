@@ -4,13 +4,23 @@ type Gauge float64
 
 type Counter int64
 
+func CounterToInt(counter Counter) int64 {
+	return int64(counter)
+}
+
+func GaugeToFloat(gauge Gauge) float64 {
+	return float64(gauge)
+}
+
 type Storage interface {
 	UpdateGauge(name string, val float64)
-	UpdateCounter(name string, val int64)
+	UpdateCounter(name string, val int64) Counter
 	GetGauge(name string) (Gauge, bool)
 	GetCounter(name string) (Counter, bool)
 	GetGaugeAll() map[string]Gauge
 	GetCounterAll() map[string]Counter
+	SaveStorage(fileStoragePath string, storeInterval int)
+	RestoreStorage(fileStoragePath string) error
 }
 
 type MemStorage struct {
@@ -29,8 +39,9 @@ func (m *MemStorage) UpdateGauge(name string, val float64) {
 	m.Gauge[name] = Gauge(val)
 }
 
-func (m *MemStorage) UpdateCounter(name string, val int64) {
+func (m *MemStorage) UpdateCounter(name string, val int64) Counter {
 	m.Counter[name] += Counter(val)
+	return m.Counter[name]
 }
 
 func (m *MemStorage) GetGauge(name string) (Gauge, bool) {

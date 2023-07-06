@@ -1,29 +1,41 @@
 package monitor
 
 import (
-	"log"
-	"net/http"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	"go.uber.org/zap"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
+	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 )
 
-func SendMetrics(client *http.Client, m *Monitor, addr string, reportInterval int) {
+func SendMetrics(m *Monitor, addr string, reportInterval int) {
+	client := resty.New()
+	url := "http://" + addr + "/update"
 	for {
 		<-time.After(time.Duration(reportInterval) * time.Second)
-		for _, url := range m.GetRoutes(addr) {
-			req, err := http.NewRequest(http.MethodPost, url, nil)
-			req.Header.Set("Host", addr)
-			req.Header.Set("Content-Type", "text/plain")
+
+		for _, body := range m.GetBody() {
+			var metric storage.Metrics
+
+			resp, err := client.R().
+				SetHeader("Content-Type", "application/json").
+				SetHeader("Accept-Encoding", "gzip").
+				SetHeader("Content-Encoding", "gzip").
+				SetBody(body).
+				SetResult(&metric).
+				Post(url)
+
 			if err != nil {
-				log.Println(err.Error())
-				return
+				logger.Log.Error("resty request error", zap.Error(err))
+				continue
 			}
-			r, err := client.Do(req)
-			if err != nil {
-				log.Println(err.Error())
-				return
-			}
-			log.Printf("StatusCode: %s\n", r.Status)
-			r.Body.Close()
+
+			logger.Log.Info("SendMetric", zap.String("URL", resp.Request.URL),
+				zap.String("body", resp.String()),
+				zap.String("StatusCode", resp.Status()),
+				zap.Any("metric", metric))
 		}
 		// обнулим pollCounter после отправки метрик
 		m.resetPollCount()

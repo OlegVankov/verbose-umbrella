@@ -2,9 +2,12 @@ package server
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
+
+	"go.uber.org/zap"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 )
 
 type Server struct {
@@ -19,7 +22,7 @@ func (s *Server) Run(address string, handler http.Handler) error {
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 	}
-	log.Printf("server starting: %s", address)
+	logger.Log.Info("Running server", zap.String("address", s.srv.Addr))
 	return s.srv.ListenAndServe()
 }
 
