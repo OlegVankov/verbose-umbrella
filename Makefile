@@ -2,6 +2,7 @@ SERVER_PORT=8080
 AGENT_PATH=./agent
 SERVER_PATH=./server
 TEMP_FILE=/tmp/metric-server-storage.json
+DSN='postgres://postgres:postgres@localhost:5432/praktikum?sslmode=disable'
 ADDRESS="127.0.0.1:${SERVER_PORT}"
 
 .DEFAULT_GOAL := default
@@ -14,6 +15,12 @@ clean:
 build: clean
 	@go build -o ${AGENT_PATH} ./cmd/agent/...
 	@go build -o ${SERVER_PATH} ./cmd/server/...
+
+.PHONY: deps
+deps:
+	@go get github.com/jmoiron/sqlx
+	@go get github.com/jackc/pgx
+	@go get github.com/go-chi/chi/v5
 
 .PHONY: test
 test:
@@ -86,5 +93,14 @@ mtest9: build
 		-server-port=${SERVER_PORT} \
 		-source-path=.
 
+.PHONY: mtest10
+mtest10: build
+	@metricstest -test.v -test.run="^TestIteration10[AB]$$" \
+            -agent-binary-path=${AGENT_PATH} \
+            -binary-path=${SERVER_PATH} \
+            -database-dsn=${DSN} \
+            -server-port=${SERVER_PORT} \
+            -source-path=.
+
 .PHONY: default
-default: clean build mtest1 mtest2 mtest3 mtest4 mtest5 mtest6 mtest7 mtest8 mtest9
+default: clean build mtest1 mtest2 mtest3 mtest4 mtest5 mtest6 mtest7 mtest8 mtest9 mtest10

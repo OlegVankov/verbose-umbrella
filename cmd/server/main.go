@@ -13,21 +13,28 @@ import (
 	"github.com/OlegVankov/verbose-umbrella/internal/handler"
 	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"github.com/OlegVankov/verbose-umbrella/internal/server"
+	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 )
 
 func main() {
 	parseFlags()
 
-	newHandler := handler.NewHandler()
-	newHandler.SetRoute()
-	srv := server.Server{}
-
 	if err := logger.Initialize(level); err != nil {
 		panic(err)
 	}
+
+	conn, err := storage.ConnectDB(databaseDSN)
+	if err != nil {
+		logger.Log.Fatal("Connection DB", zap.Error(err))
+	}
+
+	newHandler := handler.NewHandler(conn)
+	newHandler.SetRoute()
+	srv := server.Server{}
+
 	if restore {
 		if err := newHandler.Storage.RestoreStorage(fileStoragePath); err != nil {
-			panic(err)
+			logger.Log.Fatal("Restore storage", zap.Error(err))
 		}
 	}
 	go newHandler.Storage.SaveStorage(fileStoragePath, storeInterval)

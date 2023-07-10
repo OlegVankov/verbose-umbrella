@@ -44,7 +44,7 @@ func Initialize(level string) error {
 	cfg.Level = lvl
 	cfg.EncoderConfig.TimeKey = "time"
 	cfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
-	//cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	// cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	zl, err := cfg.Build()
 	if err != nil {
 		return err
@@ -66,21 +66,17 @@ func RequestLogger(h http.Handler) http.Handler {
 			ResponseWriter: w,
 			responseData:   responseData,
 		}
+		Log.Info("HTTP Request",
+			zap.String("URI", r.RequestURI),
+			zap.String("method", r.Method),
+		)
 
 		h.ServeHTTP(&lw, r)
 
-		Log.Info("got incoming HTTP request",
-			zap.String("URI", r.RequestURI),
-			zap.String("method", r.Method),
-			zap.Duration("duration", time.Since(start)),
-		)
-
-		Log.Info("got incoming HTTP response",
+		Log.Info("HTTP Response",
 			zap.Int("status", responseData.status),
 			zap.Int("size", responseData.size),
-			zap.Strings("Content-Encoding", lw.Header().Values("Content-Encoding")),
-			zap.Strings("Accept-Encoding", lw.Header().Values("Accept-Encoding")),
-			zap.Strings("Content-Type", lw.Header().Values("Content-Type")),
+			zap.Duration("duration", time.Since(start)),
 		)
 	})
 }
