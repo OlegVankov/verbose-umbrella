@@ -35,7 +35,7 @@ func Run(address string, storage storage.Storage) error {
 			logger.Log.Fatal("HTTP server ListenAndServe", zap.Error(err))
 		}
 	}()
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-c
 
