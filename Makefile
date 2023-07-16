@@ -1,6 +1,6 @@
 SERVER_PORT=8080
-AGENT_PATH=./agent
-SERVER_PATH=./server
+AGENT_PATH=./bin/agent
+SERVER_PATH=./bin/server
 TEMP_FILE=/tmp/metric-server-storage.json
 DSN='postgres://postgres:postgres@localhost:5432/praktikum?sslmode=disable'
 ADDRESS="127.0.0.1:${SERVER_PORT}"
@@ -102,5 +102,34 @@ mtest10: build
             -server-port=${SERVER_PORT} \
             -source-path=.
 
+.PHONY: mtest11
+mtest11: build
+	@metricstest -test.v -test.run="^TestIteration11$$" \
+            -agent-binary-path=${AGENT_PATH} \
+            -binary-path=${SERVER_PATH} \
+            -database-dsn=${DSN} \
+            -server-port=${SERVER_PORT} \
+            -source-path=.
+
+.PHONY: mtest12
+mtest12: build
+	@metricstest -test.v -test.run="^TestIteration12$$" \
+            -agent-binary-path=${AGENT_PATH} \
+            -binary-path=${SERVER_PATH} \
+            -database-dsn=${DSN} \
+            -server-port=${SERVER_PORT} \
+            -source-path=.
+
+.PHONY: mtest13
+mtest13: build
+	@metricstest -test.v -test.run="^TestIteration13$$" \
+            -agent-binary-path=${AGENT_PATH} \
+            -binary-path=${SERVER_PATH} \
+            -database-dsn=${DSN} \
+            -server-port=${SERVER_PORT} \
+            -source-path=.
+
 .PHONY: default
-default: clean build mtest1 mtest2 mtest3 mtest4 mtest5 mtest6 mtest7 mtest8 mtest9 mtest10
+default: clean build \
+		 mtest1 mtest2 mtest3 mtest4 mtest5 mtest6 mtest7 mtest8 mtest9 mtest10 \
+		 mtest11 mtest12 mtest13

@@ -18,41 +18,41 @@ import (
 )
 
 type Monitor struct {
-	Alloc         storage.Gauge
-	BuckHashSys   storage.Gauge
-	Frees         storage.Gauge
-	GCCPUFraction storage.Gauge
-	GCSys         storage.Gauge
-	HeapAlloc     storage.Gauge
-	HeapIdle      storage.Gauge
-	HeapInuse     storage.Gauge
-	HeapObjects   storage.Gauge
-	HeapReleased  storage.Gauge
-	HeapSys       storage.Gauge
-	LastGC        storage.Gauge
-	Lookups       storage.Gauge
-	MCacheInuse   storage.Gauge
-	MCacheSys     storage.Gauge
-	MSpanInuse    storage.Gauge
-	MSpanSys      storage.Gauge
-	Mallocs       storage.Gauge
-	NextGC        storage.Gauge
-	NumForcedGC   storage.Gauge
-	NumGC         storage.Gauge
-	OtherSys      storage.Gauge
-	PauseTotalNs  storage.Gauge
-	StackInuse    storage.Gauge
-	StackSys      storage.Gauge
-	Sys           storage.Gauge
-	TotalAlloc    storage.Gauge
-	RandomValue   storage.Gauge
-	PollCount     storage.Counter
+	Alloc         float64
+	BuckHashSys   float64
+	Frees         float64
+	GCCPUFraction float64
+	GCSys         float64
+	HeapAlloc     float64
+	HeapIdle      float64
+	HeapInuse     float64
+	HeapObjects   float64
+	HeapReleased  float64
+	HeapSys       float64
+	LastGC        float64
+	Lookups       float64
+	MCacheInuse   float64
+	MCacheSys     float64
+	MSpanInuse    float64
+	MSpanSys      float64
+	Mallocs       float64
+	NextGC        float64
+	NumForcedGC   float64
+	NumGC         float64
+	OtherSys      float64
+	PauseTotalNs  float64
+	StackInuse    float64
+	StackSys      float64
+	Sys           float64
+	TotalAlloc    float64
+	RandomValue   float64
+	PollCount     int64
 }
 
 func NewMonitor() *Monitor {
 	return &Monitor{
 		PollCount:   0,
-		RandomValue: storage.Gauge(rand.Float64()),
+		RandomValue: rand.Float64(),
 	}
 }
 
@@ -60,34 +60,34 @@ func (m *Monitor) RunMonitor(pollInterval int) {
 	rtm := runtime.MemStats{}
 	for {
 		runtime.ReadMemStats(&rtm)
-		m.Alloc = storage.Gauge(rtm.Alloc)
-		m.BuckHashSys = storage.Gauge(rtm.BuckHashSys)
-		m.Frees = storage.Gauge(rtm.Frees)
-		m.GCCPUFraction = storage.Gauge(rtm.GCCPUFraction)
-		m.GCSys = storage.Gauge(rtm.GCSys)
-		m.HeapAlloc = storage.Gauge(rtm.HeapAlloc)
-		m.HeapIdle = storage.Gauge(rtm.HeapIdle)
-		m.HeapInuse = storage.Gauge(rtm.HeapInuse)
-		m.HeapObjects = storage.Gauge(rtm.HeapObjects)
-		m.HeapReleased = storage.Gauge(rtm.HeapReleased)
-		m.HeapSys = storage.Gauge(rtm.HeapSys)
-		m.LastGC = storage.Gauge(rtm.LastGC)
-		m.Lookups = storage.Gauge(rtm.Lookups)
-		m.MCacheInuse = storage.Gauge(rtm.MCacheInuse)
-		m.MCacheSys = storage.Gauge(rtm.MCacheSys)
-		m.MSpanInuse = storage.Gauge(rtm.MSpanInuse)
-		m.MSpanSys = storage.Gauge(rtm.MSpanSys)
-		m.Mallocs = storage.Gauge(rtm.Mallocs)
-		m.NextGC = storage.Gauge(rtm.NextGC)
-		m.NumForcedGC = storage.Gauge(rtm.NumForcedGC)
-		m.NumGC = storage.Gauge(rtm.NumGC)
-		m.OtherSys = storage.Gauge(rtm.OtherSys)
-		m.PauseTotalNs = storage.Gauge(rtm.PauseTotalNs)
-		m.StackInuse = storage.Gauge(rtm.StackInuse)
-		m.StackSys = storage.Gauge(rtm.StackSys)
-		m.Sys = storage.Gauge(rtm.Sys)
-		m.TotalAlloc = storage.Gauge(rtm.TotalAlloc)
-		m.RandomValue = storage.Gauge(rand.Float64())
+		m.Alloc = float64(rtm.Alloc)
+		m.BuckHashSys = float64(rtm.BuckHashSys)
+		m.Frees = float64(rtm.Frees)
+		m.GCCPUFraction = rtm.GCCPUFraction
+		m.GCSys = float64(rtm.GCSys)
+		m.HeapAlloc = float64(rtm.HeapAlloc)
+		m.HeapIdle = float64(rtm.HeapIdle)
+		m.HeapInuse = float64(rtm.HeapInuse)
+		m.HeapObjects = float64(rtm.HeapObjects)
+		m.HeapReleased = float64(rtm.HeapReleased)
+		m.HeapSys = float64(rtm.HeapSys)
+		m.LastGC = float64(rtm.LastGC)
+		m.Lookups = float64(rtm.Lookups)
+		m.MCacheInuse = float64(rtm.MCacheInuse)
+		m.MCacheSys = float64(rtm.MCacheSys)
+		m.MSpanInuse = float64(rtm.MSpanInuse)
+		m.MSpanSys = float64(rtm.MSpanSys)
+		m.Mallocs = float64(rtm.Mallocs)
+		m.NextGC = float64(rtm.NextGC)
+		m.NumForcedGC = float64(rtm.NumForcedGC)
+		m.NumGC = float64(rtm.NumGC)
+		m.OtherSys = float64(rtm.OtherSys)
+		m.PauseTotalNs = float64(rtm.PauseTotalNs)
+		m.StackInuse = float64(rtm.StackInuse)
+		m.StackSys = float64(rtm.StackSys)
+		m.Sys = float64(rtm.Sys)
+		m.TotalAlloc = float64(rtm.TotalAlloc)
+		m.RandomValue = rand.Float64()
 		m.PollCount++ // делаем инкремент каждые pollInterval секунд
 		<-time.After(time.Duration(pollInterval) * time.Second)
 	}
@@ -112,19 +112,17 @@ func (m *Monitor) GetBody() []*bytes.Buffer {
 	for i := 0; i < val.NumField(); i++ {
 		valueField := val.Field(i)
 		typeField := val.Type().Field(i)
-		mType := strings.ToLower(strings.Split(typeField.Type.String(), ".")[1])
 
-		metric := storage.Metrics{
-			ID:    typeField.Name,
-			MType: mType,
-		}
+		metric := storage.Metrics{ID: typeField.Name}
 
 		switch v := valueField.Interface().(type) {
-		case storage.Counter:
-			delta := storage.CounterToInt(v)
+		case int64:
+			metric.MType = "counter"
+			delta := v
 			metric.Delta = &delta
-		case storage.Gauge:
-			value := storage.GaugeToFloat(v)
+		case float64:
+			metric.MType = "gauge"
+			value := v
 			metric.Value = &value
 		}
 

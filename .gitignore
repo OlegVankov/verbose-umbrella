@@ -16,8 +16,8 @@ cmd/agent/main
 cmd/agent/agent
 cmd/server/main
 cmd/server/server
-/agent
-/server
+bin/agent
+bin/server
 statictest
 metricstest
 

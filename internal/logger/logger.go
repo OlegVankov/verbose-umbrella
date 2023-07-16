@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	Log *zap.Logger = zap.NewNop()
+	Log = zap.NewNop()
 )
 
 type (
@@ -43,8 +43,7 @@ func Initialize(level string) error {
 	cfg := zap.NewProductionConfig()
 	cfg.Level = lvl
 	cfg.EncoderConfig.TimeKey = "time"
-	cfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
-	// cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	cfg.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout("2006/01/02 15:04:05")
 	zl, err := cfg.Build()
 	if err != nil {
 		return err
@@ -57,26 +56,18 @@ func RequestLogger(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
-		responseData := &responseData{
-			status: 0,
-			size:   0,
-		}
-
-		lw := loggingResponseWriter{
-			ResponseWriter: w,
-			responseData:   responseData,
-		}
-		Log.Info("HTTP Request",
-			zap.String("URI", r.RequestURI),
-			zap.String("method", r.Method),
-		)
+		responseData := &responseData{}
+		lw := loggingResponseWriter{ResponseWriter: w, responseData: responseData}
 
 		h.ServeHTTP(&lw, r)
-
-		Log.Info("HTTP Response",
-			zap.Int("status", responseData.status),
-			zap.Int("size", responseData.size),
-			zap.Duration("duration", time.Since(start)),
+		Log.Info("Request",
+			zap.String("Proto", r.Proto),
+			zap.String("URL", r.Host+r.RequestURI),
+			zap.String("Method", r.Method),
+			zap.String("From", r.RemoteAddr),
+			zap.Int("Status", responseData.status),
+			zap.Int("Size", responseData.size),
+			zap.String("Duration", time.Since(start).String()),
 		)
 	})
 }
