@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -40,25 +41,47 @@ func (s *Storage) Bootstrap(ctx context.Context) error {
 	return tx.Commit()
 }
 
-func (s *Storage) UpdateGauge(ctx context.Context, id string, val float64) {
+func (s *Storage) UpdateGauge(ctx context.Context, id string, val float64) (err error) {
+	for _, t := range []time.Duration{1, 3, 5} {
+		if err = s.updateGauge(ctx, id, val); err == nil {
+			return err
+		}
+		time.Sleep(t * time.Second)
+	}
+	return err
+}
+
+func (s *Storage) updateGauge(ctx context.Context, id string, val float64) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		logger.Log.Error("gauge begin", zap.Error(err))
+		return err
 	}
 	defer tx.Rollback()
 
 	stmt, err := tx.PrepareContext(ctx, `INSERT INTO metrics (id, type, value) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET value = $3`)
 	if err != nil {
 		logger.Log.Error("gauge prepare", zap.Error(err))
+		return err
 	}
 	defer stmt.Close()
 
 	stmt.QueryRowContext(ctx, id, "gauge", val)
 
-	tx.Commit()
+	return tx.Commit()
 }
 
-func (s *Storage) UpdateCounter(ctx context.Context, id string, val int64) (int64, error) {
+func (s *Storage) UpdateCounter(ctx context.Context, id string, val int64) (n int64, err error) {
+	for _, t := range []time.Duration{1, 3, 5} {
+		if n, err = s.updateCounter(ctx, id, val); err == nil {
+			return n, err
+		}
+		time.Sleep(t * time.Second)
+	}
+	return 0, err
+}
+
+func (s *Storage) updateCounter(ctx context.Context, id string, val int64) (int64, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		logger.Log.Error("counter begin", zap.Error(err))

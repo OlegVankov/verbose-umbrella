@@ -5,7 +5,7 @@ import (
 )
 
 type Storage interface {
-	UpdateGauge(ctx context.Context, name string, val float64)
+	UpdateGauge(ctx context.Context, name string, val float64) error
 	UpdateCounter(ctx context.Context, name string, val int64) (int64, error)
 	GetGauge(ctx context.Context, name string) (float64, bool)
 	GetCounter(ctx context.Context, name string) (int64, bool)

@@ -34,7 +34,11 @@ func (h *Handler) updates(w http.ResponseWriter, req *http.Request) {
 			}
 			m.Delta = &delta
 		case "gauge":
-			h.Storage.UpdateGauge(req.Context(), m.ID, *m.Value)
+			err := h.Storage.UpdateGauge(req.Context(), m.ID, *m.Value)
+			if err != nil {
+				errs = append(errs, err.Error())
+				continue
+			}
 		}
 	}
 
