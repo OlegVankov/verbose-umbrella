@@ -23,8 +23,6 @@ func (h *Handler) updates(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// logger.Log.Warn("value", zap.Any("metric", metrics))
-
 	errs := []string{}
 	for _, m := range metrics {
 		switch m.MType {

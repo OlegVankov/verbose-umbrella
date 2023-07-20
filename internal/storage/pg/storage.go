@@ -100,13 +100,53 @@ func (s *Storage) GetCounter(ctx context.Context, id string) (int64, bool) {
 }
 
 func (s *Storage) GetGaugeAll(ctx context.Context) map[string]float64 {
-	// TODO implement me
-	panic("implement me")
+	res := map[string]float64{}
+
+	query := `SELECT id, value FROM metrics WHERE type = "gauge"`
+
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		logger.Log.Error("get gauge all", zap.Error(err))
+		return nil
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id string
+		var value float64
+		err = rows.Scan(&id, &value)
+		if err != nil {
+			return nil
+		}
+		res[id] = value
+	}
+
+	return res
 }
 
 func (s *Storage) GetCounterAll(ctx context.Context) map[string]int64 {
-	// TODO implement me
-	panic("implement me")
+	res := map[string]int64{}
+
+	query := `SELECT id, delta FROM metrics WHERE type = "counter"`
+
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		logger.Log.Error("get counter all", zap.Error(err))
+		return nil
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id string
+		var delta int64
+		err = rows.Scan(&id, &delta)
+		if err != nil {
+			return nil
+		}
+		res[id] = delta
+	}
+
+	return res
 }
 
 func (s *Storage) PingStorage(ctx context.Context) error {
