@@ -62,19 +62,25 @@ func (s *Storage) UpdateCounter(ctx context.Context, id string, val int64) (int6
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		logger.Log.Error("counter begin", zap.Error(err))
+		return 0, err
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.PrepareContext(ctx, `INSERT INTO metrics (id, type, delta) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET delta = $3`)
+	stmt, err := tx.PrepareContext(ctx, `INSERT INTO metrics (id, type, delta) VALUES ($1, $2, $3) 
+ON CONFLICT (id) DO UPDATE SET delta = metrics.delta + $3 RETURNING delta`)
 	if err != nil {
 		logger.Log.Error("counter prepare", zap.Error(err))
+		return 0, err
 	}
 	defer stmt.Close()
 
-	oldVal, _ := s.GetCounter(ctx, id)
-	newVal := oldVal + val
+	var newVal int64
 
-	stmt.QueryRowContext(ctx, id, "counter", newVal)
+	err = stmt.QueryRowContext(ctx, id, "counter", val).Scan(&newVal)
+	if err != nil {
+		logger.Log.Error("counter query", zap.Error(err))
+		return 0, err
+	}
 
 	return newVal, tx.Commit()
 }
@@ -121,6 +127,12 @@ func (s *Storage) GetGaugeAll(ctx context.Context) map[string]float64 {
 		res[id] = value
 	}
 
+	err = rows.Err()
+	if err != nil {
+		logger.Log.Error("get counter all", zap.Error(err))
+		return nil
+	}
+
 	return res
 }
 
@@ -144,6 +156,12 @@ func (s *Storage) GetCounterAll(ctx context.Context) map[string]int64 {
 			return nil
 		}
 		res[id] = delta
+	}
+
+	err = rows.Err()
+	if err != nil {
+		logger.Log.Error("get counter all", zap.Error(err))
+		return nil
 	}
 
 	return res

@@ -38,10 +38,14 @@ func (h *Handler) updates(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	// если есть ошибки логируем их
+	// если количество ошибок равно количеству метрик выходим с ошибкой )
 	if len(errs) != 0 {
 		logger.Log.Info(strings.Join(errs, "|"))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		if len(errs) == len(metrics) {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
