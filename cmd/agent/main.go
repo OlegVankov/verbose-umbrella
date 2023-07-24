@@ -9,7 +9,6 @@ import (
 
 func main() {
 	parseFlags()
-	getEnv()
 	if err := logger.Initialize(level); err != nil {
 		panic(err)
 	}

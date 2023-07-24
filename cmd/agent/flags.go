@@ -15,6 +15,7 @@ var (
 	pollInterval   int
 	reportInterval int
 	level          string
+	key            string
 )
 
 func parseFlags() {
@@ -22,7 +23,9 @@ func parseFlags() {
 	flag.IntVar(&pollInterval, "p", 2, "частота опроса метрик")
 	flag.IntVar(&reportInterval, "r", 10, "частота отправки метрик на сервер")
 	flag.StringVar(&level, "l", "info", "уровень логирования")
+	flag.StringVar(&key, "k", "", "ключ для вычисления хеша")
 	flag.Parse()
+	getEnv()
 }
 
 func getEnv() {
@@ -42,5 +45,8 @@ func getEnv() {
 		if err != nil {
 			logger.Log.Fatal("Get ENV POLL_INTERVAL", zap.Error(err))
 		}
+	}
+	if envKey := os.Getenv("KEY"); envKey != "" {
+		key = envKey
 	}
 }
