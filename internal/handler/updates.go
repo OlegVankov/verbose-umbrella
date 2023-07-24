@@ -23,8 +23,6 @@ func (h *Handler) updates(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// logger.Log.Warn("value", zap.Any("metric", metrics))
-
 	errs := []string{}
 	for _, m := range metrics {
 		switch m.MType {
@@ -36,14 +34,22 @@ func (h *Handler) updates(w http.ResponseWriter, req *http.Request) {
 			}
 			m.Delta = &delta
 		case "gauge":
-			h.Storage.UpdateGauge(req.Context(), m.ID, *m.Value)
+			err := h.Storage.UpdateGauge(req.Context(), m.ID, *m.Value)
+			if err != nil {
+				errs = append(errs, err.Error())
+				continue
+			}
 		}
 	}
 
+	// если есть ошибки логируем их
+	// если количество ошибок равно количеству метрик выходим с ошибкой )
 	if len(errs) != 0 {
 		logger.Log.Info(strings.Join(errs, "|"))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		if len(errs) == len(metrics) {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

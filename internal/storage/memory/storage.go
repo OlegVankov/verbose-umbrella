@@ -26,8 +26,9 @@ func NewStorage() *Storage {
 	}
 }
 
-func (m *Storage) UpdateGauge(ctx context.Context, name string, val float64) {
+func (m *Storage) UpdateGauge(ctx context.Context, name string, val float64) error {
 	m.Gauge[name] = val
+	return nil
 }
 
 func (m *Storage) UpdateCounter(ctx context.Context, name string, val int64) (int64, error) {

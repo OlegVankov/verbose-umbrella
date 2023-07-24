@@ -15,5 +15,6 @@ func main() {
 	mtr := monitor.NewMonitor()
 	logger.Log.Info("Running agent", zap.String("sender", serverAddr))
 	go mtr.RunMonitor(pollInterval)
-	monitor.SendMetrics(mtr, serverAddr, reportInterval)
+	//monitor.SendMetrics(mtr, serverAddr, reportInterval)
+	monitor.SendBatch(mtr, serverAddr, reportInterval)
 }

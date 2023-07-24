@@ -146,3 +146,27 @@ func gzipBody(m *storage.Metrics) *bytes.Buffer {
 	g.Close()
 	return &buf
 }
+
+func (m *Monitor) GetMetrics() []storage.Metrics {
+	metrics := []storage.Metrics{}
+	val := reflect.ValueOf(m).Elem()
+	for i := 0; i < val.NumField(); i++ {
+		valueField := val.Field(i)
+		typeField := val.Type().Field(i)
+
+		metric := storage.Metrics{ID: typeField.Name}
+
+		switch v := valueField.Interface().(type) {
+		case int64:
+			metric.MType = "counter"
+			delta := v
+			metric.Delta = &delta
+		case float64:
+			metric.MType = "gauge"
+			value := v
+			metric.Value = &value
+		}
+		metrics = append(metrics, metric)
+	}
+	return metrics
+}
