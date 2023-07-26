@@ -28,7 +28,7 @@ func main() {
 		logger.Log.Fatal("storage", zap.Error(err))
 	}
 
-	if err := server.Run(serverAddr, stor); err != nil {
+	if err := server.Run(serverAddr, stor, key); err != nil {
 		logger.Log.Fatal("server", zap.Error(err))
 	}
 

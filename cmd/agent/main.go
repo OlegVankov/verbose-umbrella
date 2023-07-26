@@ -13,8 +13,9 @@ func main() {
 		panic(err)
 	}
 	mtr := monitor.NewMonitor()
-	logger.Log.Info("Running agent", zap.String("sender", serverAddr))
+	logger.Log.Info("Agent", zap.String("running", serverAddr))
 	go mtr.RunMonitor(pollInterval)
-	//monitor.SendMetrics(mtr, serverAddr, reportInterval)
-	monitor.SendBatch(mtr, serverAddr, reportInterval)
+	// monitor.SendMetrics(mtr, serverAddr, reportInterval)
+	monitor.SendBatch(mtr, serverAddr, reportInterval, key)
+	logger.Log.Info("Agent", zap.String("stopped", serverAddr))
 }

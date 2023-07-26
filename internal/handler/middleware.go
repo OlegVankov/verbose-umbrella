@@ -25,6 +25,7 @@ func (w *gzipWriter) Write(b []byte) (int, error) {
 	gzipAccept := strings.Contains(contentType, "application/json") || strings.Contains(contentType, "text/html")
 	if gzipAccept {
 		w.Header().Set("Content-Encoding", "gzip")
+		w.WriteHeader(http.StatusOK)
 		return w.gw.Write(b)
 	}
 	return len(b), nil

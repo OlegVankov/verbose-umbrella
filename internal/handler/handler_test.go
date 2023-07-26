@@ -28,7 +28,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.
 }
 
 func TestRouter(t *testing.T) {
-	hdl := NewHandler(memory.NewStorage())
+	hdl := NewHandler(memory.NewStorage(), "1234")
 	ts := httptest.NewServer(NewRouter(hdl))
 	defer ts.Close()
 

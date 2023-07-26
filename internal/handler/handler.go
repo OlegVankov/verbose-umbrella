@@ -6,10 +6,12 @@ import (
 
 type Handler struct {
 	Storage storage.Storage
+	Key     string
 }
 
-func NewHandler(storage storage.Storage) *Handler {
+func NewHandler(storage storage.Storage, key string) *Handler {
 	return &Handler{
 		Storage: storage,
+		Key:     key,
 	}
 }
