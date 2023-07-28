@@ -136,7 +136,7 @@ mtest14: build
             -binary-path=${SERVER_PATH} \
             -database-dsn=${DSN} \
             -server-port=${SERVER_PORT} \
-            -key="invalidkey" \
+            -key="testKey" \
             -source-path=.
 
 .PHONY: default

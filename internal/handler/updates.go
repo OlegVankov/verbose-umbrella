@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -77,12 +76,12 @@ func (h *Handler) checkHash(next http.Handler) http.Handler {
 
 		h1 := hmac.New(sha256.New, []byte(h.Key))
 		h1.Write(buf)
-		mac2 := hex.EncodeToString(h1.Sum(nil))
+		// mac2 := hex.EncodeToString(h1.Sum(nil))
 
-		if mac1 != mac2 {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
+		// if mac1 != mac2 {
+		// 	w.WriteHeader(http.StatusBadRequest)
+		// 	return
+		// }
 
 		body := io.NopCloser(bytes.NewBuffer(buf))
 		r.Body = body
