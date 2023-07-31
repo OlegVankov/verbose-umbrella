@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -49,7 +50,8 @@ func SendMetrics(m *Monitor, addr string, reportInterval int) {
 	}
 }
 
-func SendBatch(m *Monitor, addr string, reportInterval int, key string) {
+func SendBatch(m *Monitor, addr string, reportInterval int, key string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	wait := []time.Duration{1, 3, 5}
 	step := 0
 

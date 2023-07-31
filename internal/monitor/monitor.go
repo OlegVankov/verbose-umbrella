@@ -9,8 +9,11 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 	"go.uber.org/zap"
 
 	"github.com/OlegVankov/verbose-umbrella/internal/logger"
@@ -47,6 +50,10 @@ type Monitor struct {
 	TotalAlloc    float64
 	RandomValue   float64
 	PollCount     int64
+
+	TotalMemory     float64
+	FreeMemory      float64
+	CPUutilization1 float64
 }
 
 func NewMonitor() *Monitor {
@@ -56,9 +63,20 @@ func NewMonitor() *Monitor {
 	}
 }
 
-func (m *Monitor) RunMonitor(pollInterval int) {
+func (m *Monitor) RunMonitor(pollInterval int, wg *sync.WaitGroup) {
+	defer wg.Done()
 	rtm := runtime.MemStats{}
 	for {
+		v, err := mem.VirtualMemory()
+		if err != nil {
+			logger.Log.Warn("Error get virtual memory", zap.Error(err))
+			continue
+		}
+		c, err := cpu.Percent(time.Second, true)
+		if err != nil {
+			logger.Log.Warn("Error get cpu percent", zap.Error(err))
+			continue
+		}
 		runtime.ReadMemStats(&rtm)
 		m.Alloc = float64(rtm.Alloc)
 		m.BuckHashSys = float64(rtm.BuckHashSys)
@@ -89,6 +107,11 @@ func (m *Monitor) RunMonitor(pollInterval int) {
 		m.TotalAlloc = float64(rtm.TotalAlloc)
 		m.RandomValue = rand.Float64()
 		m.PollCount++ // делаем инкремент каждые pollInterval секунд
+
+		m.TotalMemory = float64(v.Total)
+		m.FreeMemory = float64(v.Free)
+		m.CPUutilization1 = c[0]
+
 		<-time.After(time.Duration(pollInterval) * time.Second)
 	}
 }

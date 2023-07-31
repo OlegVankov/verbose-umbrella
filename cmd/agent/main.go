@@ -1,6 +1,8 @@
 package main
 
 import (
+	"sync"
+
 	"go.uber.org/zap"
 
 	"github.com/OlegVankov/verbose-umbrella/internal/logger"
@@ -14,8 +16,17 @@ func main() {
 	}
 	mtr := monitor.NewMonitor()
 	logger.Log.Info("Agent", zap.String("running", serverAddr))
-	go mtr.RunMonitor(pollInterval)
+
+	wg := &sync.WaitGroup{}
+
+	wg.Add(1)
+	go mtr.RunMonitor(pollInterval, wg)
 	// monitor.SendMetrics(mtr, serverAddr, reportInterval)
-	monitor.SendBatch(mtr, serverAddr, reportInterval, key)
+	for i := 0; i < rateLimit; i++ {
+		wg.Add(1)
+		go monitor.SendBatch(mtr, serverAddr, reportInterval, key, wg)
+	}
+
+	wg.Wait()
 	logger.Log.Info("Agent", zap.String("stopped", serverAddr))
 }
