@@ -16,6 +16,7 @@ var (
 	storeInterval   int
 	restore         bool
 	level           string
+	databaseDSN     string
 )
 
 func parseFlags() {
@@ -24,6 +25,7 @@ func parseFlags() {
 	flag.StringVar(&fileStoragePath, "f", "/tmp/metrics-db.json", "файл, куда сохраняются текущие значения")
 	flag.BoolVar(&restore, "r", true, "загружать или нет сохранённые значения из файла при старте сервера")
 	flag.StringVar(&level, "l", "info", "уровень логирования")
+	flag.StringVar(&databaseDSN, "d", "", "строка с адресом подключения к БД")
 	flag.Parse()
 
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
@@ -45,5 +47,8 @@ func parseFlags() {
 		if err != nil {
 			logger.Log.Fatal("Get ENV RESTORE", zap.Error(err))
 		}
+	}
+	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
+		databaseDSN = envDatabaseDSN
 	}
 }

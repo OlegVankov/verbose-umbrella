@@ -24,12 +24,12 @@ func (h *Handler) value(w http.ResponseWriter, r *http.Request) {
 
 	switch metric.MType {
 	case "counter":
-		val, _ := h.Storage.GetCounter(metric.ID)
-		delta := int64(val)
+		val, _ := h.Storage.GetCounter(r.Context(), metric.ID)
+		delta := val
 		metric.Delta = &delta
 	case "gauge":
-		val, _ := h.Storage.GetGauge(metric.ID)
-		value := float64(val)
+		val, _ := h.Storage.GetGauge(r.Context(), metric.ID)
+		value := val
 		metric.Value = &value
 	}
 
@@ -42,7 +42,7 @@ func (h *Handler) value(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) valueGauge(w http.ResponseWriter, req *http.Request) {
 	name := chi.URLParam(req, "name")
-	value, ok := h.Storage.GetGauge(name)
+	value, ok := h.Storage.GetGauge(req.Context(), name)
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -55,13 +55,12 @@ func (h *Handler) valueGauge(w http.ResponseWriter, req *http.Request) {
 
 func (h *Handler) valueCounter(w http.ResponseWriter, req *http.Request) {
 	name := chi.URLParam(req, "name")
-	value, ok := h.Storage.GetCounter(name)
+	value, ok := h.Storage.GetCounter(req.Context(), name)
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "plain/text")
 
-	val := int64(value)
-	w.Write([]byte(fmt.Sprint(val)))
+	w.Write([]byte(fmt.Sprint(value)))
 }

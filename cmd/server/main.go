@@ -2,48 +2,58 @@ package main
 
 import (
 	"context"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"errors"
 
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 
-	"github.com/OlegVankov/verbose-umbrella/internal/handler"
+	_ "github.com/jackc/pgx/v5/stdlib"
+
 	"github.com/OlegVankov/verbose-umbrella/internal/logger"
 	"github.com/OlegVankov/verbose-umbrella/internal/server"
+	"github.com/OlegVankov/verbose-umbrella/internal/storage"
+	"github.com/OlegVankov/verbose-umbrella/internal/storage/memory"
+	"github.com/OlegVankov/verbose-umbrella/internal/storage/pg"
 )
 
 func main() {
 	parseFlags()
 
-	newHandler := handler.NewHandler()
-	newHandler.SetRoute()
-	srv := server.Server{}
-
 	if err := logger.Initialize(level); err != nil {
 		panic(err)
 	}
-	if restore {
-		if err := newHandler.Storage.RestoreStorage(fileStoragePath); err != nil {
-			panic(err)
-		}
+
+	stor, err := setStorage(context.Background())
+	if err != nil {
+		logger.Log.Fatal("storage", zap.Error(err))
 	}
-	go newHandler.Storage.SaveStorage(fileStoragePath, storeInterval)
 
-	go func() {
-		err := srv.Run(serverAddr, newHandler.Router)
-		if err != nil && err == http.ErrServerClosed {
-			logger.Log.Fatal(err.Error(), zap.String("event", "start server"))
+	if err := server.Run(serverAddr, stor); err != nil {
+		logger.Log.Fatal("server", zap.Error(err))
+	}
+
+	logger.Log.Info("server gracefully shutdown complete")
+}
+
+func setStorage(ctx context.Context) (storage.Storage, error) {
+	if databaseDSN != "" {
+		db, err := sqlx.Open("pgx", databaseDSN)
+		if err != nil {
+			return nil, err
 		}
-	}()
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-	<-c
-
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	_ = srv.Shutdown(ctx)
+		store := pg.NewStorage(db)
+		if err := store.Bootstrap(ctx); err != nil {
+			return nil, err
+		}
+		return store, nil
+	}
+	if fileStoragePath != "" {
+		store := memory.NewStorage()
+		if err := store.RestoreStorage(fileStoragePath); err != nil {
+			return nil, err
+		}
+		go store.SaveStorage(fileStoragePath, storeInterval)
+		return store, nil
+	}
+	return nil, errors.New("error set storage")
 }

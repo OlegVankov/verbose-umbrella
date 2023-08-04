@@ -9,6 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/OlegVankov/verbose-umbrella/internal/storage/memory"
 )
 
 func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.Response, string) {
@@ -26,9 +28,8 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.
 }
 
 func TestRouter(t *testing.T) {
-	handler := NewHandler()
-	handler.SetRoute()
-	ts := httptest.NewServer(handler.Router)
+	hdl := NewHandler(memory.NewStorage())
+	ts := httptest.NewServer(NewRouter(hdl))
 	defer ts.Close()
 
 	tests := []struct {
