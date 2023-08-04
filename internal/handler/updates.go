@@ -2,11 +2,7 @@ package handler
 
 import (
 	"bytes"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
-	"io"
 	"net/http"
 	"strings"
 
@@ -58,34 +54,4 @@ func (h *Handler) updates(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"status": "ok"}`))
-}
-
-func (h *Handler) checkHash(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		mac1 := r.Header.Get("HashSHA256")
-
-		if len(mac1) == 0 || len(h.Key) == 0 {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		buf, err := io.ReadAll(r.Body)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		h1 := hmac.New(sha256.New, []byte(h.Key))
-		h1.Write(buf)
-		hex.EncodeToString(h1.Sum(nil))
-
-		// if mac1 != mac2 {
-		// 	w.WriteHeader(http.StatusBadRequest)
-		// 	return
-		// }
-
-		body := io.NopCloser(bytes.NewBuffer(buf))
-		r.Body = body
-		next.ServeHTTP(w, r)
-	})
 }
