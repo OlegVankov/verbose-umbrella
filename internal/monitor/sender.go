@@ -89,7 +89,8 @@ func SendBatch(m *Monitor, addr string, reportInterval int, key string, wg *sync
 				step++
 				if step == 3 {
 					logger.Log.Error("send batch", zap.Error(err))
-					return
+					time.Sleep(30 * time.Second)
+					continue
 				}
 				client = client.SetRetryWaitTime(wait[step] * time.Second)
 			}
