@@ -13,6 +13,7 @@ func NewRouter(handler *Handler) http.Handler {
 
 	router.Use(logger.RequestLogger)
 	router.Use(compressMiddleware)
+	router.Use(handler.checkHash)
 	router.Get("/", handler.home)
 	router.Get("/ping", handler.ping)
 	router.Route("/value", func(r chi.Router) {

@@ -3,8 +3,12 @@ package monitor
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -46,26 +50,37 @@ func SendMetrics(m *Monitor, addr string, reportInterval int) {
 	}
 }
 
-func SendBatch(m *Monitor, addr string, reportInterval int) {
+func SendBatch(m *Monitor, addr string, reportInterval int, key string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	wait := []time.Duration{1, 3, 5}
 	step := 0
+
 	client := resty.New()
-	client.SetRetryCount(3).SetRetryWaitTime(wait[step] * time.Second)
+	// client.SetRetryCount(3)
+	client.SetRetryWaitTime(wait[step] * time.Second)
+
 	url := "http://" + addr + "/updates"
 	for {
 		<-time.After(time.Duration(reportInterval) * time.Second)
 
-		data, _ := json.Marshal(m.GetMetrics())
+		data, err := json.Marshal(m.GetMetrics())
+		if err != nil {
+			logger.Log.Error("send batch", zap.Error(err))
+			continue
+		}
 
 		var body bytes.Buffer
 		gBody := gzip.NewWriter(&body)
 		gBody.Write(data)
 		gBody.Close()
 
+		sha := computeHmac256(data, key)
+
 		resp, err := client.R().
 			SetHeader("Content-Type", "application/json").
 			SetHeader("Accept-Encoding", "gzip").
 			SetHeader("Content-Encoding", "gzip").
+			SetHeader("HashSHA256", sha).
 			SetBody(&body).
 			Post(url)
 
@@ -73,12 +88,13 @@ func SendBatch(m *Monitor, addr string, reportInterval int) {
 			if resp.StatusCode() == http.StatusGatewayTimeout {
 				step++
 				if step == 3 {
-					logger.Log.Error("resty request error", zap.Error(err))
-					return
+					logger.Log.Error("send batch", zap.Error(err))
+					time.Sleep(30 * time.Second)
+					continue
 				}
-				client.SetRetryWaitTime(wait[step] * time.Second)
+				client = client.SetRetryWaitTime(wait[step] * time.Second)
 			}
-			logger.Log.Error("resty request error", zap.Error(err))
+			logger.Log.Error("send batch", zap.Error(err))
 			continue
 		}
 
@@ -88,4 +104,14 @@ func SendBatch(m *Monitor, addr string, reportInterval int) {
 			zap.String("body", resp.String()),
 			zap.String("StatusCode", resp.Status()))
 	}
+}
+
+func computeHmac256(message []byte, secret string) string {
+	if secret == "" {
+		return ""
+	}
+	key := []byte(secret)
+	h := hmac.New(sha256.New, key)
+	h.Write(message)
+	return hex.EncodeToString(h.Sum(nil))
 }

@@ -16,10 +16,10 @@ import (
 	"github.com/OlegVankov/verbose-umbrella/internal/storage"
 )
 
-func Run(address string, storage storage.Storage) error {
+func Run(address string, storage storage.Storage, key string) error {
 	logger.Log.Info("server", zap.String("starting", "..."))
 
-	hdl := handler.NewHandler(storage)
+	hdl := handler.NewHandler(storage, key)
 	server := &http.Server{
 		Addr:           address,
 		Handler:        handler.NewRouter(hdl),

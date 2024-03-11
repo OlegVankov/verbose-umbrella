@@ -129,7 +129,17 @@ mtest13: build
             -server-port=${SERVER_PORT} \
             -source-path=.
 
+.PHONY: mtest14
+mtest14: build
+	@metricstest -test.v -test.run="^TestIteration14$$" \
+            -agent-binary-path=${AGENT_PATH} \
+            -binary-path=${SERVER_PATH} \
+            -database-dsn=${DSN} \
+            -server-port=${SERVER_PORT} \
+            -key="testKey" \
+            -source-path=.
+
 .PHONY: default
 default: clean build \
 		 mtest1 mtest2 mtest3 mtest4 mtest5 mtest6 mtest7 mtest8 mtest9 mtest10 \
-		 mtest11 mtest12 mtest13
+		 mtest11 mtest12 mtest13 mtest14

@@ -17,6 +17,7 @@ var (
 	restore         bool
 	level           string
 	databaseDSN     string
+	key             string
 )
 
 func parseFlags() {
@@ -26,6 +27,7 @@ func parseFlags() {
 	flag.BoolVar(&restore, "r", true, "загружать или нет сохранённые значения из файла при старте сервера")
 	flag.StringVar(&level, "l", "info", "уровень логирования")
 	flag.StringVar(&databaseDSN, "d", "", "строка с адресом подключения к БД")
+	flag.StringVar(&key, "k", "", "ключ для вычисления хеша")
 	flag.Parse()
 
 	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
